@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\4_MyFloder\glad.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="源.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\4_MyFloder\Includes\stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="floor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="IObjectLight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PointLight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DirLight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadTex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GressD.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="light.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vectexData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vis.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="moveStep1.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="moveStep.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="people.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CM_normal_Cal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="run\Fragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\Vertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\light.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\RGBAfragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\Blendfragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\MirVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\MirFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testvertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\skycubeVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\skycubeFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\mirCubeVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\mirCubeFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testexploGeo.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testnorlGeo.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testnorlVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\testnorlFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\InstanceVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\InstanceFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="run\wall.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\awesomeface.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\container2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\container2_specular.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\lighting_maps_specular_color.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\matrix.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\grass.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="run\blending_transparent_window.png">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="First.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
