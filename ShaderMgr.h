@@ -41,7 +41,8 @@ public:
 	}
 	void transCom(Shader shader)
 	{
-
+		shader.use();
+		//shader.setMat4()
 	}
 private:
 

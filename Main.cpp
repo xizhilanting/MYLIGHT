@@ -24,6 +24,7 @@
 #include "vectexData.h"
 #include "conff.h"
 #include "ShaderMgr.h"
+#include "LedMgr.h"
 using namespace std;
 unsigned int amount = 1000;//行星数量
 unsigned int peopleCount = 1;
@@ -48,6 +49,7 @@ void drawPoint(Shader pointPtrShader, unsigned int pointVAO, vector<glm::vec3> p
 GLFWwindow* RC();
 unsigned int loadCubemap(vector<std::string> faces);
 Camera MyCamera(glm::vec3(30, 50, 90));
+LedMgr ledMgr;
 //Camera MyCamera(glm::vec3(0, 20, 20)); 
 //Camera MyCamera(glm::vec3(0, 0, 0));
 const unsigned int SCR_WIDTH = 800;
@@ -161,18 +163,22 @@ int main()
 	
 
 	//模型绘制shader中传入LED
-	ourShader.use();
+	/*ourShader.use();
 	glActiveTexture(GL_TEXTURE0);
 	ourShader.setFloat("LEDA.SLED", 0);
 	glBindTexture(GL_TEXTURE_2D, LED);
 	ourShader.setVec3("LEDA.ld", glm::vec3(0, 0, 75));
 	ourShader.setVec3("LEDA.rd", glm::vec3(0, 0, 0));
 	ourShader.setVec3("LEDA.ru", glm::vec3(0, 15, 0));
-	ourShader.setVec3("LEDA.ins",ins);
+	ourShader.setVec3("LEDA.ins",ins);*/
 
 	
 	myconf.getPara("ins", ins);
 	
+	
+	ledMgr.addMShader(ourShader);
+	ledMgr.addLShader(ourShader,LEDShader);
+	ledMgr.DrawLedS(ourShader);
 
 	while (!glfwWindowShouldClose(Window))
 	{
@@ -208,8 +214,8 @@ int main()
 		notfirst = true;
 		tocount++;
 
-		ourShader.use();
-		ourShader.setVec3("LEDA.ins", ins);
+		/*ourShader.use();
+		ourShader.setVec3("LEDA.ins", ins);*/
 		//设置公用的两个矩阵(另一个放在改变视角函数中)
 		projection = glm::perspective(glm::radians(MyCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_end, distal);
 		
@@ -330,10 +336,7 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 		}
 
 	}
-	if (first)
-	{
-		first = !first;
-	}
+	
 
 	//地板
 	ourShader.use();
@@ -359,7 +362,7 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 		}
 	}
 	//LED
-	LEDShader.use();
+	/*LEDShader.use();
 	glActiveTexture(GL_TEXTURE0);
 	LEDShader.setFloat("material.diffuse", 0);
 	glBindTexture(GL_TEXTURE_2D, LED);
@@ -367,26 +370,30 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 	LEDShader.setFloat("material.specular", 1);
 	glBindTexture(GL_TEXTURE_2D, LED);
 	LEDShader.setVec3("viewPos", MyCamera.Position);
-	glBindVertexArray(floorVAO);
+	glBindVertexArray(floorVAO);*/
 	int rra = 15;
 	glm::mat4 model;
+	model = glm::translate(model, glm::vec3(-3.5, 0.0f, 0));
 	model = glm::scale(model, glm::vec3(1, rra , rra*rate));
 	model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
 	model = glm::rotate(model, glm::radians(-90.0f),glm::vec3(0,0,1));
 	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
 	model = glm::translate(model, glm::vec3(0, -0.50f, -0.50f));
-	LEDShader.setMat4("model", model);
+	/*LEDShader.setMat4("model", model);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glm::vec4 ld = model * glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f);
-	glm::vec4 rd = model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-	glm::vec4 ru = model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f);
+	*/
+	ledMgr.addStru(LEDShader, LedStru(model, LED, floorVAO));
+	/*if (first)
+	{
+		ledMgr.DrawLedS(ourShader);			//静态动态分类，后期再说吧
+	}*/
+	ledMgr.DrawLed(ourShader);
 
 
-
-	int a = 0;
-
-	
-
+	if (first)
+	{
+		first = !first;
+	}
 }
 //窗口回调函数
 void framebuffer_size_callback(GLFWwindow* Window, int width, int height)
