@@ -86,6 +86,18 @@
     <ClInclude Include="CM_normal_Cal.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="SpotLight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="conff.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LedMgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderMgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="run\Fragment.shader">
@@ -145,6 +157,24 @@
     <None Include="run\InstanceFragment.shader">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="run\3.1.2.shadow_mapping_depth.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\3.1.2.shadow_mapping_depth.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\LEDfragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\pointVertex.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="run\pointFragment.shader">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="0.delayWork">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="run\wall.jpg">
@@ -176,5 +206,10 @@
     <ResourceCompile Include="First.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="run\config">
+      <Filter>资源文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>

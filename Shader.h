@@ -12,7 +12,10 @@ class Shader {
 public:
 	unsigned int ID;
 	//构造函数，读取并构建着色器
+	Shader():Shader("Vertex.shader","Fragment.shader")
+	{
 
+	}
 	Shader(const GLchar * vertexPath, const GLchar * fragmentPath, const GLchar * geometryPath = nullptr)
 	{
 		//1、从文件路径获取顶点/片段着色器

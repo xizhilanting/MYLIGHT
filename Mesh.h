@@ -54,6 +54,7 @@ public:
 		unsigned int normalNr = 1;
 		unsigned int heightNr = 1;
 		shader.use();
+		//cout << textures.size() << endl;
 		for (unsigned int i = 0; i < textures.size(); i++)
 		{
 			glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding

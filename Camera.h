@@ -22,7 +22,7 @@ enum Camera_Movement {
 	TURNSLOWER
 
 };
-const float YAW = 90.0f;
+const float YAW = -90.0f;
 const float PITCH = -10.0f;
 const float SPEED = 20.5f;
 const float SENSITIVITY = 0.1f;
@@ -46,7 +46,7 @@ public:
 	float MouseSensitivity;
 	float Zoom;
 	// constructor with vectors
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED),MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, 1.0f)), MovementSpeed(SPEED),MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
 		Position = position;
 		WorldUp = up;
@@ -55,7 +55,7 @@ public:
 		updateCameraVectors();
 	}
 	// constructor with scalar values
-	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED),  MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, 1.0f)), MovementSpeed(SPEED),  MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);
@@ -109,13 +109,13 @@ public:
 		if (direction == TURNSLOWER)
 			turnSlower();
 		if(direction==LOOKUP)
-			ProcessMouseMovement(0, 50);
+			ProcessMouseMovement(0, 20);
 		if(direction==LOOKDOWN)
-			ProcessMouseMovement(0, -50);
+			ProcessMouseMovement(0, -20);
 		if(direction==LOOKLEFT)
-			ProcessMouseMovement(-50, 0);
+			ProcessMouseMovement(-20, 0);
 		if(direction==LOOKRIGHT)
-			ProcessMouseMovement(50, 0);
+			ProcessMouseMovement(20, 0);
 	}
 	void moveFaster() {
 		MovementSpeed++;

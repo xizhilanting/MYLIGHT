@@ -1,6 +1,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-
+#include <windows.h>
 #include <cstdlib>
 #include <iostream>
 #include "Shader.h"
@@ -22,6 +22,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "vectexData.h"
+#include "conff.h"
+#include "ShaderMgr.h"
 using namespace std;
 unsigned int amount = 1000;//行星数量
 unsigned int peopleCount = 1;
@@ -40,25 +42,34 @@ void processInput(GLFWwindow *window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void vis(bool firstControl);
 void flloLeader();
+void renderScene(Shader shader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, unsigned int LED);
 glm::mat4* InitPlanetData();
+void drawPoint(Shader pointPtrShader, unsigned int pointVAO, vector<glm::vec3> pos);
 GLFWwindow* RC();
 unsigned int loadCubemap(vector<std::string> faces);
-Camera MyCamera(glm::vec3(0, 50, -90));
+Camera MyCamera(glm::vec3(30, 50, 90));
+//Camera MyCamera(glm::vec3(0, 20, 20)); 
+//Camera MyCamera(glm::vec3(0, 0, 0));
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-float screenWidth = 800, screenHeight = 600;//窗口尺寸
-//视图矩阵和投影矩阵
+//公用视图矩阵和投影矩阵
 glm::mat4 view;
 glm::mat4 projection;
 
+//定义平截头体，近端远端
+const float near_end = 0.1f;
+const float distal = 300.0f;
+
+//灯光强度ins
+glm::vec3 ins(1, 1, 1);
+
 //两个灯光控制类
 IObjectLight IoLight;
-
-
-
+//脚本类
+conff myconf;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -70,50 +81,34 @@ int main()
 	{
 		return -1;
 	}
-	//操作信息
+	//加载shader
 	Shader ourShader("Vertex.shader", "Fragment.shader");
-	Shader lightCubeShader("Vertex.shader", "light.shader");
-	Model ourModel("nanosuit/nanosuit.obj");
-	Shader floorShader{ "Vertex.shader", "Fragment.shader" };
-	//Shader BlendShader{ "Vertex.shader", "Blendfragment.shader" };
-	Shader skyboxShader{ "skycubeVertex.shader" ,"skycubeFragment.shader" };
-
-	GressD gressD(&MyCamera);
-	gressD.addPos(glm::vec3(-1.0, 0.5, -3));
-	gressD.addPos(glm::vec3(-1.0, 0.5, -6));
-	gressD.addPos(glm::vec3(-1.0, 0.5, -9));
-	gressD.addPos(glm::vec3(-1.0, 0.5, -16));
-	IoLight.addShader(gressD.getShader());
-	IoLight.addShader(ourShader);
-	//IoLight.addShader(BlendShader);
-	IoLight.addShader(floorShader);
-
-	//天空盒
-	vector<std::string> faces
-	{
-		"skybox//right.jpg",
-		"skybox//left.jpg",
-		"skybox//top.jpg",
-		"skybox//bottom.jpg",
-		"skybox//front.jpg",
-		"skybox//back.jpg"
-	};
-	unsigned int cubemapTexture = loadCubemap(faces);
-	unsigned int skyboxVBO;
-	glGenBuffers(1, &skyboxVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-	unsigned int skyboxVAO;
-	glGenVertexArrays(1, &skyboxVAO);
-	glBindVertexArray(skyboxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	//天空盒加载结束
-
+	Shader LEDShader("Vertex.shader", "LEDfragment.shader");
+	Shader pointPtrShader("pointVertex.shader", "pointFragment.shader");
+	//加载模型
+	//Model ourModel("nanosuit/nanosuit.obj");
+	Model ourModel("house/house.obj");
 	
-	//设置灯
-	vector<pointLight> pointLight(4);
+
+	//绑定矩形数据
+	unsigned int pointVBO, pointVAO;
+	glGenVertexArrays(1, &pointVAO);
+	glGenBuffers(1, &pointVBO);
+	glBindVertexArray(pointVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	//结束
+
+	IoLight.addShader(ourShader);
+	IoLight.addShader(LEDShader);
+
+
+	//设置灯 四个点光源一个定向光源
+	/*vector<pointLight> pointLight(4);
 	for (unsigned int  i = 0; i < 4; i++)
 	{
 		pointLight[i].position = pointLightPositions[i];
@@ -121,24 +116,11 @@ int main()
 	}
 	dirLight LdirLight;
 	LdirLight.position = glm::vec3(25.0f, 30.0f, -70.0f);
-	IoLight.addDLight(LdirLight);
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	unsigned int lightCubeVAO;
-	glGenVertexArrays(1, &lightCubeVAO);
-	glBindVertexArray(lightCubeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	IoLight.addDLight(LdirLight);*/
 
 	//地板
 	unsigned int textureIDFloor = LoadTex("wall.jpg");
+	unsigned int LED = LoadTex("wsp.jpg");
 	unsigned int floorVBO;
 	glGenBuffers(1, &floorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
@@ -154,25 +136,22 @@ int main()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 	
-	
 	// 在此之前不要忘记首先 use 对应的着色器程序（来设定uniform）
 	ourShader.use();
 	ourShader.setFloat("material.shininess", 64.0f);
-	floorShader.use();
-	floorShader.setFloat("material.shininess", 64.0f);
-	//BlendShader.use();
-	//BlendShader.setFloat("material.shininess", 64.0f);
+	
+
 	//接口块
 		//绑定shader中的uniform
 	unsigned int uniformOur = glGetUniformBlockIndex(ourShader.ID, "Matrices");
-	unsigned int uniformLight = glGetUniformBlockIndex(lightCubeShader.ID, "Matrices");
-	unsigned int uniformFloor = glGetUniformBlockIndex(floorShader.ID, "Matrices");
-	//unsigned int uniformBlend = glGetUniformBlockIndex(BlendShader.ID, "Matrices");
+	unsigned int uniformLED = glGetUniformBlockIndex(LEDShader.ID, "Matrices");
+	unsigned int uniformpoint = glGetUniformBlockIndex(pointPtrShader.ID, "Matrices");
+	
+	
 	glUniformBlockBinding(ourShader.ID, uniformOur,4);
-	glUniformBlockBinding(lightCubeShader.ID, uniformLight, 4);
-	glUniformBlockBinding(floorShader.ID, uniformFloor, 4);
-	//glUniformBlockBinding(BlendShader.ID, uniformBlend, 4);
-		//生成一个空的接口块
+	glUniformBlockBinding(LEDShader.ID, uniformLED, 4);
+	glUniformBlockBinding(pointPtrShader.ID, uniformpoint, 4);
+		//生成一个空的接口块		
 	unsigned int uboMatrices;
 	glGenBuffers(1, &uboMatrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
@@ -180,7 +159,21 @@ int main()
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 4, uboMatrices, 0, 2 * sizeof(glm::mat4));
 	
+
+	//模型绘制shader中传入LED
+	ourShader.use();
+	glActiveTexture(GL_TEXTURE0);
+	ourShader.setFloat("LEDA.SLED", 0);
+	glBindTexture(GL_TEXTURE_2D, LED);
+	ourShader.setVec3("LEDA.ld", glm::vec3(0, 0, 75));
+	ourShader.setVec3("LEDA.rd", glm::vec3(0, 0, 0));
+	ourShader.setVec3("LEDA.ru", glm::vec3(0, 15, 0));
+	ourShader.setVec3("LEDA.ins",ins);
+
 	
+	myconf.getPara("ins", ins);
+	
+
 	while (!glfwWindowShouldClose(Window))
 	{
 		//处理输入
@@ -192,10 +185,34 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		//test...
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		static int tocount = 0;
 		
-		//设置公用的两个矩阵
-		view = MyCamera.GetViewMatrix();
-		projection= glm::perspective(glm::radians(MyCamera.Zoom), (float)screenWidth / (float)screenHeight, 0.1f, 1000.0f);
+		static float oldtime = glfwGetTime();
+		static bool notfirst = false;
+		static int fpsnum = 10;
+		if (tocount % fpsnum == 0&&notfirst)
+		{
+			static float x = ins.x;
+			static float y = ins.y;
+			static float z = ins.z;
+			float nowtime = glfwGetTime();
+			float deltime = (nowtime - oldtime) / fpsnum;
+			//cout << "fps= " << 1 / deltime << "（帧每秒）" << endl;
+			cout << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");  delta= (" << ins.x - x << "," << ins.y - y << "," << ins.z - z << ")" << "  fps= " << 1 / deltime << "（帧每秒）";
+			x = ins.x;
+			y = ins.y;
+			z = ins.z;
+			oldtime = nowtime;
+			tocount = 0;
+		}
+		notfirst = true;
+		tocount++;
+
+		ourShader.use();
+		ourShader.setVec3("LEDA.ins", ins);
+		//设置公用的两个矩阵(另一个放在改变视角函数中)
+		projection = glm::perspective(glm::radians(MyCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_end, distal);
+		
 		//更新uniform块
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
@@ -203,32 +220,12 @@ int main()
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	
-		//设置光的位置
-		static float rotOld = 0;
-		float rot = glfwGetTime() - rotOld;
-		if (rot>=10)
-		{
-			rotOld = glfwGetTime();
-		}
-		rot *= 10;
+		
+		//临时绘制标志位
+		vector<glm::vec3> pospoints{ {0.0f,0,0},{ 0,0,75.0f },{ 0, 15.0f, 0 } };
+		drawPoint(pointPtrShader,  pointVAO, pospoints);
+		
 
-		for (unsigned int i = 0; i < 4; i++)
-		{
-			lightCubeShader.use();
-			lightCubeShader.setVec3("lightColor", pointLight[0].specular+ pointLight[0].ambient);
-			glm::mat4 model;
-			/*model = glm::rotate(model, 100*glm::radians(rot), glm::vec3(0, 1, 0));*/
-			model = glm::translate(model, glm::vec3(0.0f, 0.0f, -rot));
-			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::translate(model,glm::vec3(0,8,0));
-			lightCubeShader.setMat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);	
-			//把光源同步到模型中	
-			IoLight.rendDLight();
-			IoLight.changeLightPos(model*glm::vec4(0, 0, 0, 1), i);
-			IoLight.rendPLight();
-		}
 		//设置光结束
 		//draw 模型
 		ourShader.use();
@@ -238,96 +235,159 @@ int main()
 		movestep.setBox(box.x.max, box.y.max, box.z.max,
 			box.x.min, box.y.min, box.z.min);
 
-		static bool first = true;
-		for (unsigned int i=0;i<peopleCount;i++)
-		{
-				if (first)
-				{
-					glm::mat4 model;
-					
-					//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-					model = glm::translate(model, glm::vec3(9.0f*(i % 10), 0.0f, -7.0f*(i / 10)));
-					movestep.addInstance(model);
 
-					ourShader.setMat4("model", model);
-					ourModel.Draw(ourShader);
-				}
-				else
-				{
-					glm::mat4 model;
-					//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-					/*glm::vec3 tmp = movestep.getCurModel(i)*glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-					model = glm::translate(model, tmp);*/
-					ourShader.setMat4("model", movestep.getCurModel(i));
-					ourModel.Draw(ourShader);
-				}
-				
-		}
-		if (first)
-		{
-			first = !first;
-		}
-		//地板
-		floorShader.use();
-		glActiveTexture(GL_TEXTURE0);
-		floorShader.setFloat("material.diffuse", 0);
-		glBindTexture(GL_TEXTURE_2D, textureIDFloor);
-		glActiveTexture(GL_TEXTURE1);
-		floorShader.setFloat("material.specular", 1);
-		glBindTexture(GL_TEXTURE_2D, textureIDFloor);
-		floorShader.setVec3("viewPos", MyCamera.Position);
-		int row = 50, col = 50;
-		float rate = 5;
-		glBindVertexArray(floorVAO);
-		for (unsigned int i = 0; i < row; i++)
-		{
-			for (unsigned int j = 0; j < col; j++)
-			{
-				glm::mat4 model;
-				model = glm::scale(model, glm::vec3(rate, 1, rate));
-				model = glm::translate(model, glm::vec3(1.0f*i, -0.5f, -1.0f*j));
-				floorShader.setMat4("model", model);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-			}
-		}
+		ourShader.use();
+		ourShader.setVec3("viewPos", MyCamera.Position);
 		
-
-		//画草可以保留
-		glm::mat4 gressScale;
-		gressScale = glm::scale(gressScale, glm::vec3(5, 25, 5));
-		gressD.setModel(gressScale);
-		gressD.doDraw();
 		
 
 		
-		//天空盒绘制
-		glDepthMask(GL_FALSE);
-		glDepthFunc(GL_LEQUAL);
-		skyboxShader.use();
-		// ... 设置观察和投影矩阵
-		skyboxShader.setMat4("projection", projection);
-		glm::mat4 skyView = glm::mat4(glm::mat3(view));
-		skyboxShader.setMat4("view", skyView);
-		glBindVertexArray(skyboxVAO);
-		glActiveTexture(GL_TEXTURE0);
-		//BlendShader.setFloat("skybox", 0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
-			//结束
 
+		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO,LED);
 		
-		
+
 		glfwSwapBuffers(Window);
 		glfwPollEvents();
 	}
 	
-	glDeleteBuffers(1, &VBO);
+	//glDeleteBuffers(1, &VBO);
 	glfwTerminate();
 	return 0;
 }
+void drawPoint(Shader pointPtrShader,unsigned int pointVAO, vector<glm::vec3> pos)
+{
+	//开始
+	pointPtrShader.use();
 
+	// pass projection matrix to shader (note that in this case it could change every frame)
+	//glm::mat4 thprojection = projection;
+	//glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	//pointPtrShader.setMat4("projection", thprojection);
+
+	// camera/view transformation
+	//glm::mat4 thview = view;
+	//glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	//pointPtrShader.setMat4("view", thview);
+
+	// render boxes
+	glBindVertexArray(pointVAO);
+	//for (unsigned int i = 0; i < 10; i++)
+	{
+		// calculate the model matrix for each object and pass it to shader before drawing
+		 // make sure to initialize matrix to identity matrix first
+		for (auto i : pos)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, i);
+			//float angle = 20.0f * i;
+			//model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			pointPtrShader.setMat4("model", model);
+			pointPtrShader.setVec3("color", i);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+	}
+
+	//结束
+}
+void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, unsigned int LED)
+{
+
+
+	static bool first = true;
+
+	for (unsigned int i = 0; i<peopleCount; i++)
+	{
+		if (first)
+		{
+			glm::mat4 model;
+
+			model = glm::translate(model, glm::vec3(9.0f*(i % 10), -1.0f, -7.0f*(i / 10)));
+			model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+			model = glm::translate(model, glm::vec3(19.0f , 0.0f, 0.0f));
+
+			//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+			movestep.addInstance(model);
+			glm::vec3 vec = movestep.getPos(i);
+			IoLight.settar(vec);
+			IoLight.rendSLight();
+			ourShader.setMat4("model", model);
+			ourModel.Draw(ourShader);
+		}
+		else
+		{
+			
+			//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+			/*glm::vec3 tmp = movestep.getCurModel(i)*glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			model = glm::translate(model, tmp);*/
+			
+			glm::vec3 vec = movestep.getPos(i);
+			IoLight.settar(vec);
+			IoLight.rendSLight();
+			glm::mat4 model(movestep.getCurModel(i));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+			ourShader.setMat4("model", model);
+			ourModel.Draw(ourShader);
+		}
+
+	}
+	if (first)
+	{
+		first = !first;
+	}
+
+	//地板
+	ourShader.use();
+	glActiveTexture(GL_TEXTURE2);
+	ourShader.setFloat("material.diffuse", 2);
+	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
+	glActiveTexture(GL_TEXTURE3);
+	ourShader.setFloat("material.specular", 3);
+	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
+	ourShader.setVec3("viewPos", MyCamera.Position);
+	int row = 15, col = 15;
+	float rate = 5;
+	glBindVertexArray(floorVAO);
+	for (unsigned int i = 0; i < row; i++)
+	{
+		for (unsigned int j = 0; j < col; j++)
+		{
+			glm::mat4 model;
+			model = glm::scale(model, glm::vec3(rate, 1, rate));
+			model = glm::translate(model, glm::vec3(1.0f*i, -0.5f, 1.0f*j));
+			ourShader.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+	}
+	//LED
+	LEDShader.use();
+	glActiveTexture(GL_TEXTURE0);
+	LEDShader.setFloat("material.diffuse", 0);
+	glBindTexture(GL_TEXTURE_2D, LED);
+	glActiveTexture(GL_TEXTURE1);
+	LEDShader.setFloat("material.specular", 1);
+	glBindTexture(GL_TEXTURE_2D, LED);
+	LEDShader.setVec3("viewPos", MyCamera.Position);
+	glBindVertexArray(floorVAO);
+	int rra = 15;
+	glm::mat4 model;
+	model = glm::scale(model, glm::vec3(1, rra , rra*rate));
+	model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
+	model = glm::rotate(model, glm::radians(-90.0f),glm::vec3(0,0,1));
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
+	model = glm::translate(model, glm::vec3(0, -0.50f, -0.50f));
+	LEDShader.setMat4("model", model);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glm::vec4 ld = model * glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f);
+	glm::vec4 rd = model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+	glm::vec4 ru = model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f);
+
+
+
+	int a = 0;
+
+	
+
+}
 //窗口回调函数
 void framebuffer_size_callback(GLFWwindow* Window, int width, int height)
 {
@@ -394,12 +454,12 @@ void processInput(GLFWwindow* Window)
 		MyCamera.ProcessKeyboard(LOOKLEFT, deltaTime);
 	if (glfwGetKey(Window, GLFW_KEY_L) == GLFW_PRESS)
 		MyCamera.ProcessKeyboard(LOOKRIGHT, deltaTime);
-	if (glfwGetKey(Window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		movestep.changeLookMode();
+	/*if (glfwGetKey(Window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		movestep.changeLookMode();*/
 	if (glfwGetKey(Window, GLFW_KEY_UP) == GLFW_PRESS)
-		movestep.moveCir(0, 1);
+		movestep.moveCir(0, 20);
 	if (glfwGetKey(Window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		movestep.moveCir(0, -1);
+		movestep.moveCir(0, -20);
 
 	if (glfwGetKey(Window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		movestep.moveCir(1, 0);
@@ -408,6 +468,25 @@ void processInput(GLFWwindow* Window)
 	if (glfwGetKey(Window, GLFW_KEY_Z) == GLFW_PRESS)
 		FLLOWLEADER = !FLLOWLEADER;
 
+	if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_PRESS)
+		ins.x += 1;
+	if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_PRESS)
+		ins.y += 0.3;
+	if (glfwGetKey(Window, GLFW_KEY_V) == GLFW_PRESS)
+		ins.z += 0.1;
+	if (glfwGetKey(Window, GLFW_KEY_B) == GLFW_PRESS)
+		ins.x -= 1;
+	if (glfwGetKey(Window, GLFW_KEY_N) == GLFW_PRESS)
+		ins.y -= 0.3;
+	if (glfwGetKey(Window, GLFW_KEY_M) == GLFW_PRESS)
+		ins.z -= 0.1;
+	if (glfwGetKey(Window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		myconf.addPare("ins", ins);
+		cout << "add ins :" << ins.x << " " << ins.y << " " << ins.z << endl;
+	}
+	//通过键盘改变视角之后更新view矩阵
+	view = MyCamera.GetViewMatrix();
 }
 //通过鼠标改变视角
 //void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -462,16 +541,16 @@ unsigned int loadCubemap(vector<std::string> faces)
 	return textureID;
 }
 
+//初始化
 GLFWwindow* RC() {
-	//初始化
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	GLFWwindow* Window = glfwCreateWindow(800, 600, "LearnOpengl", NULL, NULL);
+	GLFWwindow* Window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpengl", NULL, NULL);
 	if (!Window)
 	{
-		cout << "faild" << endl;
+		cout << "failed" << endl;
 		glfwTerminate();
 		return nullptr;
 	}
@@ -492,6 +571,7 @@ GLFWwindow* RC() {
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	vis(true);
+	LoadKeyboardLayout("0x409", KLF_ACTIVATE | KLF_SETFORPROCESS);//更改输入法
 	return Window;
 }
 float calcCo(glm::vec3 begin, glm::vec3 end) {

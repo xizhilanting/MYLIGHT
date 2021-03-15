@@ -4,6 +4,7 @@
 #include "glm/glm/gtc/type_ptr.hpp"
 #include "DirLight.h"
 #include "PointLight.h"
+#include"SpotLight.h"
 #include <vector>
 #include "Shader.h"
 class IObjectLight
@@ -28,6 +29,27 @@ public:
 		dLight.getAllLight();
 	}
 
+	void addSLight(spotLight& t_light)
+	{
+		sLight.addLight(t_light);
+	}
+	void addSLight(glm::vec3& t_position) {
+		spotLight t_light;
+		t_light.position = t_position;
+		addSLight(t_light);
+	}
+	void clearSLight()
+	{
+		sLight.clearLight();
+	}
+	std::vector<spotLight>
+		getAllSLight() {
+		sLight.getAllLight();
+	}
+	void settar(glm::vec3 vec)
+	{
+		sLight.setTar(vec);
+	}
 	void addPLight(pointLight& t_light)
 	{
 		pLight.addLight(t_light);
@@ -88,9 +110,39 @@ public:
 			}
 		}
 	}
+	void rendSLight() {
+		for (auto t_shader : shader)
+		{
+			t_shader.use();
+			for (unsigned int i = 0; i < sLight.getAllLight().size(); i++)
+			{
+				auto light = sLight.getAllLight()[i];
+
+				// directional light
+				t_shader.setVec3(string("pointLights[") + to_string(i) + "].position", light.position);
+				t_shader.setVec3("pointLights[" + to_string(i) + "].ambient", light.ambient);
+				t_shader.setVec3("pointLights[" + to_string(i) + "].diffuse", light.diffuse);
+				t_shader.setVec3("pointLights[" + to_string(i) + "].specular", light.specular);
+				t_shader.setFloat("pointLights[" + to_string(i) + "].constant", light.constant);
+				t_shader.setFloat("pointLights[" + to_string(i) + "].linear", light.linear);
+				t_shader.setFloat("pointLights[" + to_string(i) + "].quadratic", light.quadratic);
+				t_shader.setVec3("spotLight.position", light.position);
+				t_shader.setVec3("spotLight.direction", light.direction);
+				t_shader.setVec3("spotLight.ambient", light.ambient);
+				t_shader.setVec3("spotLight.diffuse", light.diffuse);
+				t_shader.setVec3("spotLight.specular", light.specular);
+				t_shader.setFloat("spotLight.constant", light.constant);
+				t_shader.setFloat("spotLight.linear", light.linear);
+				t_shader.setFloat("spotLight.quadratic", light.quadratic);
+				t_shader.setFloat("spotLight.cutOff", light.cutOff);
+				t_shader.setFloat("spotLight.outerCutOff", light.outerCutOff);
+			}
+		}
+	}
 private:
 	DirLight dLight;
 	PointLight pLight;
+	SpotLight sLight;
 	std::vector<Shader> shader;
 };
 

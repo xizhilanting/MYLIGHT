@@ -21,7 +21,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AED66F74-0131-49E9-9A64-1A8B309F74B3}</ProjectGuid>
     <RootNamespace>First</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <ProjectName>First</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -33,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -46,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -131,15 +132,20 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\4_MyFloder\glad.c" />
     <ClCompile Include="Main.cpp" />
+    <Text Include="run\config">
+      <FileType>Document</FileType>
+    </Text>
     <ClCompile Include="源.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\4_MyFloder\Includes\stb_image.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="conff.h" />
     <ClInclude Include="floor.h" />
     <ClInclude Include="GressD.h" />
     <ClInclude Include="IObjectLight.h" />
     <ClInclude Include="DirLight.h" />
+    <ClInclude Include="LedMgr.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="LoadTex.h" />
     <ClInclude Include="Mesh.h" />
@@ -151,20 +157,28 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderMgr.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="vectexData.h" />
     <ClInclude Include="CM_normal_Cal.h" />
     <ClInclude Include="vis.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="0.delayWork" />
+    <None Include="run\3.1.2.shadow_mapping_depth.fs" />
+    <None Include="run\3.1.2.shadow_mapping_depth.vs" />
     <None Include="run\Blendfragment.shader" />
     <None Include="run\Fragment.shader" />
     <None Include="run\InstanceFragment.shader" />
     <None Include="run\InstanceVertex.shader" />
+    <None Include="run\LEDfragment.shader" />
     <None Include="run\light.shader" />
     <None Include="run\mirCubeFragment.shader" />
     <None Include="run\mirCubeVertex.shader" />
     <None Include="run\MirFragment.shader" />
     <None Include="run\MirVertex.shader" />
+    <None Include="run\pointFragment.shader" />
+    <None Include="run\pointVertex.shader" />
     <None Include="run\RGBAfragment.shader" />
     <None Include="run\skycubeFragment.shader" />
     <None Include="run\skycubeVertex.shader" />

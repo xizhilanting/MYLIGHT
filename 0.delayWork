@@ -1,0 +1,60 @@
+
+struct LED {
+	sampler2D SLED;
+	vec3 ld;
+	vec3 rd;
+	vec3 ru;
+};
+	//模型绘制shader中传入LED
+	ourShader.use();
+	glActiveTexture(GL_TEXTURE1);
+	ourShader.setFloat("LEDA.SLED", 1);
+	glBindTexture(GL_TEXTURE_2D, LED);
+	ourShader.setVec3("LEDA.ld", glm::vec3(0, 0, 75));
+	ourShader.setVec3("LEDA.rd", glm::vec3(0, 0, 0));
+	ourShader.setVec3("LEDA.ru", glm::vec3(0, 15, 0));
+
+	DATA
+	// Top face			 1,1,1,
+	-0.5f,  0.5f, -0.5f, 1,1,1, 0.0f, 1.0f, // top-left
+	0.5f,  0.5f,  0.5f, 1,1,1, 1.0f, 0.0f, // bottom-right
+	0.5f,  0.5f, -0.5f, 1,1,1, 1.0f, 1.0f, // top-right     
+	0.5f,  0.5f,  0.5f, 1,1,1, 1.0f, 0.0f, // bottom-right
+	-0.5f,  0.5f, -0.5f, 1,1,1, 0.0f, 1.0f, // top-left
+	-0.5f,  0.5f,  0.5f, 1,1,1, 0.0f, 0.0f  // bottom-left
+
+
+
+int rra = 15;
+	//	float rate = 5;
+	glm::mat4 model;
+	//model = glm::translate(model, glm::vec3(-0.50f, 0.00f, 0.0f));
+	model = glm::scale(model, glm::vec3(1, rra , rra*rate));
+	model = glm::translate(model, glm::vec3(0, 0.50f, 0.0f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 0, 1));
+	model = glm::translate(model, glm::vec3(0, -0.50f, 0.50f));
+	LEDShader.setMat4("model", model);
+
+
+设计用于LED屏幕绘制数据和作为灯光的位置数据的映射转换函数
+
+//过程，shader管理类，合计需要传递基本类似的量，分每次传递和单次传递****************************************************
+
+
+2 按照fragPos和灯片三个点（按照距离计算）三个点选择
+光源等效位置计算及需要改计算的面片选择（加到论文里）
+
+step修改带动衰减值的函数
+
+
+小马原地转圈
+
+把led拿远点
+
+
+最终目标 好多纹理，小马映射，好多人，加载视频，多种光效合并
+
+加一个计算时间的函数 glTimeMgr抄一下
+
+
+过程：新建一个脚本泪，类似于uniform穿名字传个数，然后返回，	//完成
