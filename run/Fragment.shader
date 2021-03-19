@@ -65,6 +65,7 @@ struct LED {
 	vec3 rd;
 	vec3 ru;
     vec3 ins;
+    vec3 ins4;
 };
 uniform LED LEDA;
 //测试用待删除
@@ -75,6 +76,10 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcLedLight(LED thLED,vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcLedLight2(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcLedLight3(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcLedLight5(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcColor(sampler2D tex,vec2 tx);
 float ShadowCalculation(vec4 fragPosLightSpace);
 void main()									
@@ -113,7 +118,7 @@ void main()
 //	//阴影结束
 }
 //屏蔽掉其他光照仅留LED
-result=CalcLedLight(LEDA,norm, FragPos, viewDir);
+result= CalcLedLight4(LEDA,norm, FragPos, viewDir);
 
 
 
@@ -267,7 +272,7 @@ vec3 CalcSpotLight1(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     }
     else 
     {
-vec3 ambient;
+        vec3 ambient;
         ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
         // else, use ambient light so scene isn't completely dark outside the spotlight.
         vec3 result = (light.ambient * texture(material.diffuse, TexCoords).rgb);
@@ -310,7 +315,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 //LED
 
-vec3 CalcLedLight(LED thLED,vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcLedLight2(LED thLED,vec3 normal, vec3 fragPos, vec3 viewDir)//2号为原版，新版本为增加单个光源面片处理，光源等效位置计算及需要改计算的面片选择
 {
 //通过pos降采返回vec3
 //通过颜色，和两个pos计算颜色
@@ -370,6 +375,431 @@ return result;
 //return result/step/step*10;
 
 }
+
+
+//2号为原版，3为增加单个光源面片处理，光源等效位置计算及需要改计算的面片选择
+vec3 CalcLedLight3(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//面片处理
+{
+    //通过pos降采返回vec3
+    //通过颜色，和两个pos计算颜色
+    int step = 50;//各分50步
+    vec3 result;
+    //vec3 thbegin = thLED.ld;
+    //float zlen = thLED.rd.z - thLED.ld.z;
+    //float ylen = thLED.ru.y - thLED.rd.y;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float stepL = 0.998 / (step - 1);
+    for (int i = 0; i < step; i++)
+    {
+        for (int j = 0; j < step; j += 2)
+        {
+            //vec3 now = thbegin + vec3(0, 1.0*i*ylen / step, 1.0*j*zlen / step);
+            //vec2 tx = vec2(j*stepL+minv, i*stepL+minv);
+            vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+            vec2 tx = vec2(i * stepL + minv,j * stepL + minv);
+            //vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+            SpotLight thSLight;
+            thSLight.position = now;
+            //float distance    = length(thSLight.position - fragPos)*1.5;
+            thSLight.cutOff = 0.8061;
+            thSLight.outerCutOff = 0.5002;
+            //float theta = dot(normalize(thSLight.position - fragPos), normalize(-vec3(1,0,0))); 
+            //float epsilon = thSLight.cutOff - thSLight.outerCutOff;
+            //float intensity = clamp((theta - thSLight.outerCutOff) / epsilon, 0.0, 1.0);
+            //if(intensity>0.0001&&distance<55)
+            float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//距离
+            if (abs(disFragLight) < 1.5)	//判断距离 
+            {
+                vec3 tmpFragPos = fragPos;
+                vec2 txtmp = tx;
+                //距离符合，需要光源等效位置计算
+                if (fragPos.y >= now.y - ylen / step / 2 && fragPos.y <= now.y + ylen / step /2)
+                {
+                    tx.y = fragPos.y / ylen;
+                    fragPos.y = now.y;
+                    
+                    //return vec3(1, 0, 0);
+                }
+                if (fragPos.z >= now.z + zlen / step / 2 && fragPos.z <= now.z - zlen / step / 2)
+                {
+                    tx.x = fragPos.z / zlen;
+                    fragPos.z = now.z;
+                    //return vec3(0, 1, 0);
+                }
+                vec3 color = CalcColor(thLED.SLED, tx);
+                tx = txtmp;
+                thSLight.ambient = color;
+                thSLight.diffuse = color;
+                thSLight.specular = color;
+                thSLight.direction = vec3(1, 0, 0);
+                /*thSLight.constant = 1.0f;
+                thSLight.linear = 2.0;
+                thSLight.quadratic = 1.592;*/
+                thSLight.constant = thLED.ins.x;
+                thSLight.linear = thLED.ins.y;
+                thSLight.quadratic = thLED.ins.z;
+
+                //*************1,4.9,1.4配合0.7，0.5效果不错******************
+                // //20,9.7,2.4
+                //thSLight.linear = 13;
+                //thSLight.quadratic = 15.92;
+
+
+                //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                fragPos = tmpFragPos;
+            }
+            else{
+
+                vec3 color = CalcColor(thLED.SLED, tx);
+                thSLight.ambient = color;
+                thSLight.diffuse = color;
+                thSLight.specular = color;
+                thSLight.direction = vec3(1, 0, 0);
+                /*thSLight.constant = 1.0f;
+                thSLight.linear = 2.0;
+                thSLight.quadratic = 1.592;*/
+                thSLight.constant = thLED.ins.x;
+                thSLight.linear = thLED.ins.y;
+                thSLight.quadratic = thLED.ins.z;
+
+                //*************1,4.9,1.4配合0.7，0.5效果不错******************
+                // //20,9.7,2.4
+                //thSLight.linear = 13;
+                //thSLight.quadratic = 15.92;
+
+
+                //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+            }
+        }
+    }
+    return result;
+    //return result/step/step*10;
+
+}
+
+//2号为原版，3为增加单个光源面片处理，光源等效位置计算及需要改计算的面片选择    4为增加近距离灯光从而减弱阴影效果
+vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//此4
+{
+    //通过pos降采返回vec3
+    //通过颜色，和两个pos计算颜色
+    int step = 50;//各分50步
+    vec3 result;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//距离
+    if (abs(disFragLight) < 1.5)	//判断距离 
+    {
+        step = 200;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+                vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x+4;
+                    thSLight.linear = thLED.ins.y +13.3;
+                    thSLight.quadratic = thLED.ins.z +16.8999;
+
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                }
+            }
+        }
+    }
+    else {
+        step = 50;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+
+                vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+ 
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x;
+                    thSLight.linear = thLED.ins.y;
+                    thSLight.quadratic = thLED.ins.z;
+
+
+                    //*************1,4.9,1.4配合0.7，0.5效果不错******************
+                    // //20,9.7,2.4
+                    //thSLight.linear = 13;
+                    //thSLight.quadratic = 15.92;
+
+
+                    //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                }
+            }
+        }
+
+    }
+    
+    return result;
+
+}
+
+//2号为原版，3为增加单个光源面片处理，光源等效位置计算及需要改计算的面片选择    4为增加近距离灯光从而减弱阴影效果
+vec3 CalcLedLight5(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//此新版本，结合3和4
+{
+    //通过pos降采返回vec3
+    //通过颜色，和两个pos计算颜色
+    int step = 50;//各分50步
+    vec3 result;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//距离
+    if (abs(disFragLight) < 1.5)	//判断距离 
+    {
+        step = 100;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+                vec3 now = thbegin + vec3(0, ylen * j / step  , zlen * i / step  );
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+                vec3 tmpFragPos = fragPos;
+                vec2 txtmp = tx;
+                //距离符合，需要光源等效位置计算
+                if (fragPos.y > now.y - ylen / step  && fragPos.y < now.y + ylen / step )
+                {
+                    tx.y = (fragPos.y-LEDA.rd.y) / ylen;
+                    fragPos.y = now.y;
+
+                    //return vec3(1, 0, 0);
+                }
+                if (fragPos.z >now.z + zlen / step / 2 && fragPos.z < now.z - zlen / step / 2)
+                {
+                    tx.x = (fragPos.z-LEDA.ld.z) / zlen;
+                    fragPos.z = now.z;
+                    //return vec3(0, 1, 0);
+                }
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    tx = txtmp;
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x ;
+                    thSLight.linear = thLED.ins.y ;
+                    thSLight.quadratic = thLED.ins.z ;
+
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                    fragPos = tmpFragPos;
+                }
+            }
+        }
+    }
+    else {
+        step = 50;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+
+                vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x;
+                    thSLight.linear = thLED.ins.y;
+                    thSLight.quadratic = thLED.ins.z;
+                    thSLight.constant = 1;
+                    thSLight.linear = 1;
+                    thSLight.quadratic = 1;
+
+                    //*************1,4.9,1.4配合0.7，0.5效果不错******************
+                    // //20,9.7,2.4
+                    //thSLight.linear = 13;
+                    //thSLight.quadratic = 15.92;
+
+
+                    //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                }
+            }
+        }
+
+    }
+
+    return result;
+
+}
+
+
+//2号为原版，3为增加单个光源面片处理，光源等效位置计算及需要改计算的面片选择    4为增加近距离灯光从而减弱阴影效果   5结合3和4
+vec3 CalcLedLight(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//此新版本，6优化5，通过减少分支语句
+{
+    //通过pos降采返回vec3
+    //通过颜色，和两个pos计算颜色
+    int step = 50;//各分50步
+    vec3 result;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//距离
+    if (abs(disFragLight) < 1.5)	//判断距离 
+    {
+        step = 100;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+                vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+                vec3 tmpFragPos = fragPos;
+                vec2 txtmp = tx;
+                //距离符合，需要光源等效位置计算
+                if (fragPos.y > now.y - ylen / step / 2 && fragPos.y <= now.y + ylen / step / 2)
+                {
+                    tx.y = fragPos.y / ylen;
+                    fragPos.y = now.y;
+
+                    //return vec3(1, 0, 0);
+                }
+                if (fragPos.z > now.z + zlen / step / 2 && fragPos.z <= now.z - zlen / step / 2)
+                {
+                    tx.x = fragPos.z / zlen;
+                    fragPos.z = now.z;
+                    //return vec3(0, 1, 0);
+                }
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    tx = txtmp;
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x * 5;
+                    thSLight.linear = thLED.ins.y * 5;
+                    thSLight.quadratic = thLED.ins.z * 5;
+
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                    fragPos = tmpFragPos;
+                }
+            }
+        }
+    }
+    else {
+        step = 50;
+        float stepL = 0.998 / (step - 1);
+        for (int i = 0; i < step; i++)
+        {
+            for (int j = 0; j < step; j += 2)
+            {
+
+                vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+                vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+                SpotLight thSLight;
+                thSLight.position = now;
+                //float distance    = length(thSLight.position - fragPos)*1.5;
+                thSLight.cutOff = 0.8061;
+                thSLight.outerCutOff = 0.5002;
+
+                {
+                    vec3 color = CalcColor(thLED.SLED, tx);
+                    thSLight.ambient = color;
+                    thSLight.diffuse = color;
+                    thSLight.specular = color;
+                    thSLight.direction = vec3(1, 0, 0);
+                    /*thSLight.constant = 1.0f;
+                    thSLight.linear = 2.0;
+                    thSLight.quadratic = 1.592;*/
+                    thSLight.constant = thLED.ins.x;
+                    thSLight.linear = thLED.ins.y;
+                    thSLight.quadratic = thLED.ins.z;
+
+                    //*************1,4.9,1.4配合0.7，0.5效果不错******************
+                    // //20,9.7,2.4
+                    //thSLight.linear = 13;
+                    //thSLight.quadratic = 15.92;
+
+
+                    //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                    result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                }
+            }
+        }
+
+    }
+
+    return result;
+
+}
+
+
 const float offset = 1.0 / 300.0;  
 vec2 offsets[9] = vec2[](
 			vec2(-offset,  offset), // 左上
