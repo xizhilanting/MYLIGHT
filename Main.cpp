@@ -67,7 +67,11 @@ const float distal = 300.0f;
 
 //灯光强度ins
 glm::vec3 ins(1, 1, 1);
-
+//LED计算密度
+int density=50;
+//脚本控制的光角度
+float cutOff = 0.8061;
+float outerCutOff = 0.5002;
 //两个灯光控制类
 IObjectLight IoLight;
 //脚本类
@@ -174,7 +178,9 @@ int main()
 
 	
 	myconf.getPara("ins", ins);
-	
+	myconf.getPara("density", density);
+	myconf.getPara("cutOff", cutOff);
+	myconf.getPara("outerCutOff", outerCutOff);
 	
 	ledMgr.addMShader(ourShader);
 	ledMgr.addLShader(ourShader,LEDShader);
@@ -204,7 +210,7 @@ int main()
 			float nowtime = glfwGetTime();
 			float deltime = (nowtime - oldtime) / fpsnum;
 			//cout << "fps= " << 1 / deltime << "（帧每秒）" << endl;
-			cout << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");  delta= (" << ins.x - x << "," << ins.y - y << "," << ins.z - z << ")" << "  fps= " << 1 / deltime << "（帧每秒）";
+			cout << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");"<<" 计算密度="<<density<< "(cutOff,outerCutOff)= ( "<<cutOff<<","<<outerCutOff<<" )"<<"  fps= " << 1 / deltime ;
 			x = ins.x;
 			y = ins.y;
 			z = ins.z;
@@ -487,10 +493,27 @@ void processInput(GLFWwindow* Window)
 		ins.y -= 0.3;
 	if (glfwGetKey(Window, GLFW_KEY_M) == GLFW_PRESS)
 		ins.z -= 0.1;
+	if (glfwGetKey(Window, GLFW_KEY_O) == GLFW_PRESS)
+		density += 2;
+	if (glfwGetKey(Window, GLFW_KEY_P) == GLFW_PRESS)
+		density -= 2;
+	if (glfwGetKey(Window, GLFW_KEY_7) == GLFW_PRESS)
+		cutOff += 0.01;
+	if (glfwGetKey(Window, GLFW_KEY_8) == GLFW_PRESS)
+		cutOff -= 0.01;
+	if (glfwGetKey(Window, GLFW_KEY_9) == GLFW_PRESS)
+		outerCutOff += 0.01;
+	if (glfwGetKey(Window, GLFW_KEY_0) == GLFW_PRESS)
+		outerCutOff -= 0.01;
 	if (glfwGetKey(Window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
 		myconf.addPare("ins", ins);
-		cout << "add ins :" << ins.x << " " << ins.y << " " << ins.z << endl;
+		myconf.addPare("density", density);
+		myconf.addPare("cutOff", cutOff);
+		myconf.addPare("outerCutOff", outerCutOff);
+		cout << "\nadd ins :" << ins.x << " " << ins.y << " " << ins.z << endl;
+		cout << "add density :" << density << endl;
+		cout << "add cutOff: " << cutOff << " outerCutOff: " << outerCutOff << endl;
 	}
 	//通过键盘改变视角之后更新view矩阵
 	view = MyCamera.GetViewMatrix();

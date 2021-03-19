@@ -105,6 +105,9 @@ stringstream& operator>> (stringstream& op, glm::vec3& oop)
 	return op;
 
 }
+
+
+
 stringstream& operator>> (stringstream& op, glm::mat4& oop)
 {
 	for (int i = 0; i < 4; i++)
@@ -118,6 +121,8 @@ string to_string(glm::vec3 vec3)
 {
 	return string(to_string(vec3.x) + " " + to_string(vec3.y) + " " + to_string(vec3.z));
 }
+
+
 
 string to_string(glm::mat4 mat4)
 {

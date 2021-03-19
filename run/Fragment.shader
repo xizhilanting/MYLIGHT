@@ -66,6 +66,9 @@ struct LED {
 	vec3 ru;
     vec3 ins;
     vec3 ins4;
+    int density;//LED¼ÆËãÃÜ¶È
+    float cutOff;
+    float outerCutOff;
 };
 uniform LED LEDA;
 //²âÊÔÓÃ´ýÉ¾³ý
@@ -139,162 +142,21 @@ result= CalcLedLight4(LEDA,norm, FragPos, viewDir);
 //FragColor=vec4(vec3(texture(LEDA.SLED, TexCoords)),1);
 
 }	
-//ÒõÓ°
-float ShadowCalculation(vec4 fragPosLightSpace)
-{
-    // perform perspective divide
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-    // check whether current frag pos is in shadow
-    vec3 normal = normalize(Normal);
-    vec3 lightDir = normalize(spotLight.position - FragPos);
-    //float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    //float shadow = 0.0;
-    //vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    //for(int x = -1; x <= 1; ++x)
-    //{
-    //    for(int y = -1; y <= 1; ++y)
-    //    {
-    //        float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-    //        shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
-    //    }    
-    //}
-    ////shadow /= 9.0;
-    
-    //// Keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    //if(projCoords.z > 1.0)
-    //    shadow = 0.0;
-        //float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-float bias = 0.0005;
-float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-    return shadow;
-    return shadow;
-}	
-//¼ÆËã¶¨Ïò¹â
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
-{
-    vec3 lightDir = normalize(-light.direction);
-    // Âþ·´Éä×ÅÉ«
-    float diff = max(dot(normal, lightDir), 0.0);
-    // ¾µÃæ¹â×ÅÉ«
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    // ºÏ²¢½á¹û
-	vec3 ambient ;
-    //ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
-    return (ambient + diffuse + specular);
-
-}	
-//¼ÆËãµã¹âÔ´
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
-{
-    vec3 lightDir = normalize(light.position - fragPos);
-    // Âþ·´Éä×ÅÉ«
-    float diff = max(dot(normal, lightDir), 0.0);
-    // ¾µÃæ¹â×ÅÉ«
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    // Ë¥¼õ
-    float distance    = length(light.position - fragPos)*1.5;	
-    float attenuation = 1.0 / (light.constant + light.linear * distance + 
-                 light.quadratic * (distance * distance));  
-    // ºÏ²¢½á¹û
-	//vec3 ambient=light.ambient   * vec3(texture(material.diffuse, TexCoords));
- //  // ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
- //   vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
-	//vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
-
-vec3 ambient=light.ambient  ;
-   // ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse  = light.diffuse  * diff;
-	vec3 specular = light.specular * spec;
-
-    //vec3 specular = light.specular * spec * vec3(texture(texture1, TexCoords));
-    //ambient  *= attenuation;
-    diffuse  *= attenuation;
-    specular *= attenuation;
-//if(distance>15)	return vec3(0,0,0);
-    return ambient +( diffuse + specular)/2;
-
-}		
-// calculates the color when using a spot light.
-vec3 CalcSpotLight1(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
-{
-    vec3 lightDir = normalize(light.position - fragPos);
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
-    // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    // attenuation
-    float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-    // spotlight intensity
-    float theta = dot(lightDir, normalize(-light.direction)); 
-    float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-    // combine results
-    if(theta > light.cutOff) // remember that we're working with angles as cosines instead of degrees so a '>' is used.
-    {    
-        // ambient
-		vec3 ambient;
-        ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
-        
-        // diffuse 
-        vec3 norm = normalize(Normal);
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
-        
-        // specular
-        vec3 viewDir = normalize(viewPos - FragPos);
-        vec3 reflectDir = reflect(-lightDir, norm);  
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-        vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
-        
-        // attenuation
-        //float distance    = length(light.position - FragPos);
-        //float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-
-        //// ambient  *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branche
-        //diffuse   *= attenuation;
-        //specular *= attenuation;   
-            
-        vec3 result =  ambient+diffuse + specular;
-		return result;
-       // FragColor = vec4(result, 1.0);
-    }
-    else 
-    {
-        vec3 ambient;
-        ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
-        // else, use ambient light so scene isn't completely dark outside the spotlight.
-        vec3 result = (light.ambient * texture(material.diffuse, TexCoords).rgb);
-		return result;
-    }
-    //return (ambient + diffuse + specular);	
-}
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
-     //lightDir = normalize(light.position - fragPos);
-	vec3 lightDir=-light.direction;
+    //lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = -light.direction;
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0),material.shininess); //
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess); //
     // attenuation
     float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     // spotlight intensity
-    float theta = dot(light.direction, normalize(fragPos-light.position));
+    float theta = dot(light.direction, normalize(fragPos - light.position));
     //float theta = dot(lightDir, normalize(-light.direction)); 
     float epsilon = light.cutOff - light.outerCutOff;
     //float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
@@ -303,182 +165,13 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     //intensity = 0.01;
     // combine results
     vec3 ambient = light.ambient;// * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse = light.diffuse ;//* diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse;//* diff * vec3(texture(material.diffuse, TexCoords));
     vec3 specular = light.specular * spec;// * vec3(texture(material.specular, TexCoords));
-    ambient *=   attenuation *intensity;//
-    diffuse *=   attenuation *intensity;//
-    specular *=  attenuation *intensity;//
+    ambient *= attenuation * intensity;//
+    diffuse *= attenuation * intensity;//
+    specular *= attenuation * intensity;//
     return (diffuse + specular);
     //return (ambient + diffuse + specular);
-
-}
-
-//LED
-
-vec3 CalcLedLight2(LED thLED,vec3 normal, vec3 fragPos, vec3 viewDir)//2ºÅÎªÔ­°æ£¬ÐÂ°æ±¾ÎªÔö¼Óµ¥¸ö¹âÔ´ÃæÆ¬´¦Àí£¬¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã¼°ÐèÒª¸Ä¼ÆËãµÄÃæÆ¬Ñ¡Ôñ
-{
-//Í¨¹ýpos½µ²É·µ»Øvec3
-//Í¨¹ýÑÕÉ«£¬ºÍÁ½¸öpos¼ÆËãÑÕÉ«
-int step = 50;//¸÷·Ö50²½
-vec3 result;
-	//vec3 thbegin = thLED.ld;
-	//float zlen = thLED.rd.z - thLED.ld.z;
-	//float ylen = thLED.ru.y - thLED.rd.y;
-	vec3 thbegin = LEDA.ld;
-	float zlen = LEDA.rd.z - LEDA.ld.z;
-	float ylen = LEDA.ru.y - LEDA.rd.y;
-	float minv = 0.001;
-	float stepL = 0.998/(step-1);
-	for (int i =0; i < step; i++)
-	{
-		for (int j = 0; j < step; j+=2)
-		{
-			//vec3 now = thbegin + vec3(0, 1.0*i*ylen / step, 1.0*j*zlen / step);
-			//vec2 tx = vec2(j*stepL+minv, i*stepL+minv);
-			vec3 now = thbegin + vec3(0, 1.0*j/step*ylen,1.0*i/step*zlen);
-			vec2 tx = vec2(i*stepL+minv, j * stepL + minv);
-			SpotLight thSLight;
-			thSLight.position=now;
-			//float distance    = length(thSLight.position - fragPos)*1.5;
-			thSLight.cutOff=0.8061;
-			thSLight.outerCutOff=0.5002;
-			//float theta = dot(normalize(thSLight.position - fragPos), normalize(-vec3(1,0,0))); 
-			//float epsilon = thSLight.cutOff - thSLight.outerCutOff;
-			//float intensity = clamp((theta - thSLight.outerCutOff) / epsilon, 0.0, 1.0);
-			//if(intensity>0.0001&&distance<55)
-			//if()	 
-			{
-				vec3 color=CalcColor(thLED.SLED,tx);
-				thSLight.ambient=color;
-				thSLight.diffuse=color;
-				thSLight.specular=color;
-				thSLight.direction=vec3(1,0,0);
-				/*thSLight.constant = 1.0f;
-				thSLight.linear = 2.0;
-				thSLight.quadratic = 1.592;*/
-                thSLight.constant = thLED.ins.x;
-                thSLight.linear = thLED.ins.y;
-                thSLight.quadratic = thLED.ins.z;
-                
-                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
-                // //20,9.7,2.4
-                //thSLight.linear = 13;
-                //thSLight.quadratic = 15.92;
-
-
-				//CalcPointLight(thSLight, normal, fragPos, viewDir);
-				result+=CalcSpotLight(thSLight,  normal,  fragPos,  viewDir);
-			}
-		}
-	}
-return result;
-//return result/step/step*10;
-
-}
-
-
-//2ºÅÎªÔ­°æ£¬3ÎªÔö¼Óµ¥¸ö¹âÔ´ÃæÆ¬´¦Àí£¬¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã¼°ÐèÒª¸Ä¼ÆËãµÄÃæÆ¬Ñ¡Ôñ
-vec3 CalcLedLight3(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//ÃæÆ¬´¦Àí
-{
-    //Í¨¹ýpos½µ²É·µ»Øvec3
-    //Í¨¹ýÑÕÉ«£¬ºÍÁ½¸öpos¼ÆËãÑÕÉ«
-    int step = 50;//¸÷·Ö50²½
-    vec3 result;
-    //vec3 thbegin = thLED.ld;
-    //float zlen = thLED.rd.z - thLED.ld.z;
-    //float ylen = thLED.ru.y - thLED.rd.y;
-    vec3 thbegin = LEDA.ld;
-    float zlen = LEDA.rd.z - LEDA.ld.z;
-    float ylen = LEDA.ru.y - LEDA.rd.y;
-    float minv = 0.001;
-    float stepL = 0.998 / (step - 1);
-    for (int i = 0; i < step; i++)
-    {
-        for (int j = 0; j < step; j += 2)
-        {
-            //vec3 now = thbegin + vec3(0, 1.0*i*ylen / step, 1.0*j*zlen / step);
-            //vec2 tx = vec2(j*stepL+minv, i*stepL+minv);
-            vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
-            vec2 tx = vec2(i * stepL + minv,j * stepL + minv);
-            //vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
-            SpotLight thSLight;
-            thSLight.position = now;
-            //float distance    = length(thSLight.position - fragPos)*1.5;
-            thSLight.cutOff = 0.8061;
-            thSLight.outerCutOff = 0.5002;
-            //float theta = dot(normalize(thSLight.position - fragPos), normalize(-vec3(1,0,0))); 
-            //float epsilon = thSLight.cutOff - thSLight.outerCutOff;
-            //float intensity = clamp((theta - thSLight.outerCutOff) / epsilon, 0.0, 1.0);
-            //if(intensity>0.0001&&distance<55)
-            float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//¾àÀë
-            if (abs(disFragLight) < 1.5)	//ÅÐ¶Ï¾àÀë 
-            {
-                vec3 tmpFragPos = fragPos;
-                vec2 txtmp = tx;
-                //¾àÀë·ûºÏ£¬ÐèÒª¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã
-                if (fragPos.y >= now.y - ylen / step / 2 && fragPos.y <= now.y + ylen / step /2)
-                {
-                    tx.y = fragPos.y / ylen;
-                    fragPos.y = now.y;
-                    
-                    //return vec3(1, 0, 0);
-                }
-                if (fragPos.z >= now.z + zlen / step / 2 && fragPos.z <= now.z - zlen / step / 2)
-                {
-                    tx.x = fragPos.z / zlen;
-                    fragPos.z = now.z;
-                    //return vec3(0, 1, 0);
-                }
-                vec3 color = CalcColor(thLED.SLED, tx);
-                tx = txtmp;
-                thSLight.ambient = color;
-                thSLight.diffuse = color;
-                thSLight.specular = color;
-                thSLight.direction = vec3(1, 0, 0);
-                /*thSLight.constant = 1.0f;
-                thSLight.linear = 2.0;
-                thSLight.quadratic = 1.592;*/
-                thSLight.constant = thLED.ins.x;
-                thSLight.linear = thLED.ins.y;
-                thSLight.quadratic = thLED.ins.z;
-
-                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
-                // //20,9.7,2.4
-                //thSLight.linear = 13;
-                //thSLight.quadratic = 15.92;
-
-
-                //CalcPointLight(thSLight, normal, fragPos, viewDir);
-                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
-                fragPos = tmpFragPos;
-            }
-            else{
-
-                vec3 color = CalcColor(thLED.SLED, tx);
-                thSLight.ambient = color;
-                thSLight.diffuse = color;
-                thSLight.specular = color;
-                thSLight.direction = vec3(1, 0, 0);
-                /*thSLight.constant = 1.0f;
-                thSLight.linear = 2.0;
-                thSLight.quadratic = 1.592;*/
-                thSLight.constant = thLED.ins.x;
-                thSLight.linear = thLED.ins.y;
-                thSLight.quadratic = thLED.ins.z;
-
-                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
-                // //20,9.7,2.4
-                //thSLight.linear = 13;
-                //thSLight.quadratic = 15.92;
-
-
-                //CalcPointLight(thSLight, normal, fragPos, viewDir);
-                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
-            }
-        }
-    }
-    return result;
-    //return result/step/step*10;
 
 }
 
@@ -487,16 +180,23 @@ vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´Ë4
 {
     //Í¨¹ýpos½µ²É·µ»Øvec3
     //Í¨¹ýÑÕÉ«£¬ºÍÁ½¸öpos¼ÆËãÑÕÉ«
-    int step = 50;//¸÷·Ö50²½
+    int stepT = LEDA.density;//¸÷·Ö50²½
     vec3 result;
     vec3 thbegin = LEDA.ld;
     float zlen = LEDA.rd.z - LEDA.ld.z;
     float ylen = LEDA.ru.y - LEDA.rd.y;
     float minv = 0.001;
     float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//¾àÀë
-    if (abs(disFragLight) < 1.5)	//ÅÐ¶Ï¾àÀë 
+    SpotLight thSLight;
+    //thSLight.cutOff = 0.8061;
+    //thSLight.outerCutOff = 0.5002;
+    thSLight.cutOff = LEDA.cutOff;//thLED.cutOff;
+    thSLight.outerCutOff = LEDA.outerCutOff;// thLED.outerCutOff
+    //thSLight.cutOff = 1;
+    //thSLight.outerCutOff = 1;
+    if (abs(disFragLight) < 0)	//ÅÐ¶Ï¾àÀë 1.5
     {
-        step = 200;
+        int step = stepT*4;
         float stepL = 0.998 / (step - 1);
         for (int i = 0; i < step; i++)
         {
@@ -504,23 +204,19 @@ vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´Ë4
             {
                 vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
                 vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
-                SpotLight thSLight;
+                
                 thSLight.position = now;
                 //float distance    = length(thSLight.position - fragPos)*1.5;
-                thSLight.cutOff = 0.8061;
-                thSLight.outerCutOff = 0.5002;
+                
                 {
                     vec3 color = CalcColor(thLED.SLED, tx);
                     thSLight.ambient = color;
                     thSLight.diffuse = color;
                     thSLight.specular = color;
                     thSLight.direction = vec3(1, 0, 0);
-                    /*thSLight.constant = 1.0f;
-                    thSLight.linear = 2.0;
-                    thSLight.quadratic = 1.592;*/
-                    thSLight.constant = thLED.ins.x+4;
-                    thSLight.linear = thLED.ins.y +13.3;
-                    thSLight.quadratic = thLED.ins.z +16.8999;
+                    thSLight.constant = thLED.ins.x*4;
+                    thSLight.linear = thLED.ins.y *4;
+                    thSLight.quadratic = thLED.ins.z *5;
 
                     result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
                 }
@@ -528,7 +224,7 @@ vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´Ë4
         }
     }
     else {
-        step = 50;
+        int step = stepT;
         float stepL = 0.998 / (step - 1);
         for (int i = 0; i < step; i++)
         {
@@ -537,11 +233,10 @@ vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´Ë4
 
                 vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
                 vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
-                SpotLight thSLight;
+                
                 thSLight.position = now;
                 //float distance    = length(thSLight.position - fragPos)*1.5;
-                thSLight.cutOff = 0.8061;
-                thSLight.outerCutOff = 0.5002;
+                
  
                 {
                     vec3 color = CalcColor(thLED.SLED, tx);
@@ -549,9 +244,6 @@ vec3 CalcLedLight4(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´Ë4
                     thSLight.diffuse = color;
                     thSLight.specular = color;
                     thSLight.direction = vec3(1, 0, 0);
-                    /*thSLight.constant = 1.0f;
-                    thSLight.linear = 2.0;
-                    thSLight.quadratic = 1.592;*/
                     thSLight.constant = thLED.ins.x;
                     thSLight.linear = thLED.ins.y;
                     thSLight.quadratic = thLED.ins.z;
@@ -796,6 +488,320 @@ vec3 CalcLedLight(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//´ËÐÂ°æ±¾£
     }
 
     return result;
+
+}
+
+
+//ÒõÓ°
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    vec3 normal = normalize(Normal);
+    vec3 lightDir = normalize(spotLight.position - FragPos);
+    //float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    //float shadow = 0.0;
+    //vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    //for(int x = -1; x <= 1; ++x)
+    //{
+    //    for(int y = -1; y <= 1; ++y)
+    //    {
+    //        float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+    //        shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+    //    }    
+    //}
+    ////shadow /= 9.0;
+
+    //// Keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    //if(projCoords.z > 1.0)
+    //    shadow = 0.0;
+        //float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = 0.0005;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    return shadow;
+    return shadow;
+}
+//¼ÆËã¶¨Ïò¹â
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDir = normalize(-light.direction);
+    // Âþ·´Éä×ÅÉ«
+    float diff = max(dot(normal, lightDir), 0.0);
+    // ¾µÃæ¹â×ÅÉ«
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // ºÏ²¢½á¹û
+    vec3 ambient;
+    //ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    return (ambient + diffuse + specular);
+
+}
+//¼ÆËãµã¹âÔ´
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    // Âþ·´Éä×ÅÉ«
+    float diff = max(dot(normal, lightDir), 0.0);
+    // ¾µÃæ¹â×ÅÉ«
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // Ë¥¼õ
+    float distance = length(light.position - fragPos) * 1.5;
+    float attenuation = 1.0 / (light.constant + light.linear * distance +
+        light.quadratic * (distance * distance));
+    // ºÏ²¢½á¹û
+    //vec3 ambient=light.ambient   * vec3(texture(material.diffuse, TexCoords));
+ //  // ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
+ //   vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
+    //vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+
+    vec3 ambient = light.ambient;
+    // ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff;
+    vec3 specular = light.specular * spec;
+
+    //vec3 specular = light.specular * spec * vec3(texture(texture1, TexCoords));
+    //ambient  *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    //if(distance>15)	return vec3(0,0,0);
+    return ambient + (diffuse + specular) / 2;
+
+}
+// calculates the color when using a spot light.
+vec3 CalcSpotLight1(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    // spotlight intensity
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    // combine results
+    if (theta > light.cutOff) // remember that we're working with angles as cosines instead of degrees so a '>' is used.
+    {
+        // ambient
+        vec3 ambient;
+        ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+
+        // diffuse 
+        vec3 norm = normalize(Normal);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+
+        // specular
+        vec3 viewDir = normalize(viewPos - FragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
+
+        // attenuation
+        //float distance    = length(light.position - FragPos);
+        //float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+
+        //// ambient  *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branche
+        //diffuse   *= attenuation;
+        //specular *= attenuation;   
+
+        vec3 result = ambient + diffuse + specular;
+        return result;
+        // FragColor = vec4(result, 1.0);
+    }
+    else
+    {
+        vec3 ambient;
+        ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+        // else, use ambient light so scene isn't completely dark outside the spotlight.
+        vec3 result = (light.ambient * texture(material.diffuse, TexCoords).rgb);
+        return result;
+    }
+    //return (ambient + diffuse + specular);	
+}
+
+
+
+//LED
+
+vec3 CalcLedLight2(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//2ºÅÎªÔ­°æ£¬ÐÂ°æ±¾ÎªÔö¼Óµ¥¸ö¹âÔ´ÃæÆ¬´¦Àí£¬¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã¼°ÐèÒª¸Ä¼ÆËãµÄÃæÆ¬Ñ¡Ôñ
+{
+    //Í¨¹ýpos½µ²É·µ»Øvec3
+    //Í¨¹ýÑÕÉ«£¬ºÍÁ½¸öpos¼ÆËãÑÕÉ«
+    int step = 50;//¸÷·Ö50²½
+    vec3 result;
+    //vec3 thbegin = thLED.ld;
+    //float zlen = thLED.rd.z - thLED.ld.z;
+    //float ylen = thLED.ru.y - thLED.rd.y;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float stepL = 0.998 / (step - 1);
+    for (int i = 0; i < step; i++)
+    {
+        for (int j = 0; j < step; j += 2)
+        {
+            //vec3 now = thbegin + vec3(0, 1.0*i*ylen / step, 1.0*j*zlen / step);
+            //vec2 tx = vec2(j*stepL+minv, i*stepL+minv);
+            vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+            vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+            SpotLight thSLight;
+            thSLight.position = now;
+            //float distance    = length(thSLight.position - fragPos)*1.5;
+            thSLight.cutOff = 0.8061;
+            thSLight.outerCutOff = 0.5002;
+            //float theta = dot(normalize(thSLight.position - fragPos), normalize(-vec3(1,0,0))); 
+            //float epsilon = thSLight.cutOff - thSLight.outerCutOff;
+            //float intensity = clamp((theta - thSLight.outerCutOff) / epsilon, 0.0, 1.0);
+            //if(intensity>0.0001&&distance<55)
+            //if()	 
+            {
+                vec3 color = CalcColor(thLED.SLED, tx);
+                thSLight.ambient = color;
+                thSLight.diffuse = color;
+                thSLight.specular = color;
+                thSLight.direction = vec3(1, 0, 0);
+                /*thSLight.constant = 1.0f;
+                thSLight.linear = 2.0;
+                thSLight.quadratic = 1.592;*/
+                thSLight.constant = thLED.ins.x;
+                thSLight.linear = thLED.ins.y;
+                thSLight.quadratic = thLED.ins.z;
+
+                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
+                // //20,9.7,2.4
+                //thSLight.linear = 13;
+                //thSLight.quadratic = 15.92;
+
+
+                //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+            }
+        }
+    }
+    return result;
+    //return result/step/step*10;
+
+}
+
+
+//2ºÅÎªÔ­°æ£¬3ÎªÔö¼Óµ¥¸ö¹âÔ´ÃæÆ¬´¦Àí£¬¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã¼°ÐèÒª¸Ä¼ÆËãµÄÃæÆ¬Ñ¡Ôñ
+vec3 CalcLedLight3(LED thLED, vec3 normal, vec3 fragPos, vec3 viewDir)//ÃæÆ¬´¦Àí
+{
+    //Í¨¹ýpos½µ²É·µ»Øvec3
+    //Í¨¹ýÑÕÉ«£¬ºÍÁ½¸öpos¼ÆËãÑÕÉ«
+    int step = 50;//¸÷·Ö50²½
+    vec3 result;
+    //vec3 thbegin = thLED.ld;
+    //float zlen = thLED.rd.z - thLED.ld.z;
+    //float ylen = thLED.ru.y - thLED.rd.y;
+    vec3 thbegin = LEDA.ld;
+    float zlen = LEDA.rd.z - LEDA.ld.z;
+    float ylen = LEDA.ru.y - LEDA.rd.y;
+    float minv = 0.001;
+    float stepL = 0.998 / (step - 1);
+    for (int i = 0; i < step; i++)
+    {
+        for (int j = 0; j < step; j += 2)
+        {
+            //vec3 now = thbegin + vec3(0, 1.0*i*ylen / step, 1.0*j*zlen / step);
+            //vec2 tx = vec2(j*stepL+minv, i*stepL+minv);
+            vec3 now = thbegin + vec3(0, 1.0 * j / step * ylen, 1.0 * i / step * zlen);
+            vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+            //vec2 tx = vec2(i * stepL + minv, j * stepL + minv);
+            SpotLight thSLight;
+            thSLight.position = now;
+            //float distance    = length(thSLight.position - fragPos)*1.5;
+            thSLight.cutOff = 0.8061;
+            thSLight.outerCutOff = 0.5002;
+            //float theta = dot(normalize(thSLight.position - fragPos), normalize(-vec3(1,0,0))); 
+            //float epsilon = thSLight.cutOff - thSLight.outerCutOff;
+            //float intensity = clamp((theta - thSLight.outerCutOff) / epsilon, 0.0, 1.0);
+            //if(intensity>0.0001&&distance<55)
+            float disFragLight = dot(normalize(cross(LEDA.ld - LEDA.rd, LEDA.ru - LEDA.rd)), fragPos);//¾àÀë
+            if (abs(disFragLight) < 1.5)	//ÅÐ¶Ï¾àÀë 
+            {
+                vec3 tmpFragPos = fragPos;
+                vec2 txtmp = tx;
+                //¾àÀë·ûºÏ£¬ÐèÒª¹âÔ´µÈÐ§Î»ÖÃ¼ÆËã
+                if (fragPos.y >= now.y - ylen / step / 2 && fragPos.y <= now.y + ylen / step / 2)
+                {
+                    tx.y = fragPos.y / ylen;
+                    fragPos.y = now.y;
+
+                    //return vec3(1, 0, 0);
+                }
+                if (fragPos.z >= now.z + zlen / step / 2 && fragPos.z <= now.z - zlen / step / 2)
+                {
+                    tx.x = fragPos.z / zlen;
+                    fragPos.z = now.z;
+                    //return vec3(0, 1, 0);
+                }
+                vec3 color = CalcColor(thLED.SLED, tx);
+                tx = txtmp;
+                thSLight.ambient = color;
+                thSLight.diffuse = color;
+                thSLight.specular = color;
+                thSLight.direction = vec3(1, 0, 0);
+                /*thSLight.constant = 1.0f;
+                thSLight.linear = 2.0;
+                thSLight.quadratic = 1.592;*/
+                thSLight.constant = thLED.ins.x;
+                thSLight.linear = thLED.ins.y;
+                thSLight.quadratic = thLED.ins.z;
+
+                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
+                // //20,9.7,2.4
+                //thSLight.linear = 13;
+                //thSLight.quadratic = 15.92;
+
+
+                //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+                fragPos = tmpFragPos;
+            }
+            else {
+
+                vec3 color = CalcColor(thLED.SLED, tx);
+                thSLight.ambient = color;
+                thSLight.diffuse = color;
+                thSLight.specular = color;
+                thSLight.direction = vec3(1, 0, 0);
+                /*thSLight.constant = 1.0f;
+                thSLight.linear = 2.0;
+                thSLight.quadratic = 1.592;*/
+                thSLight.constant = thLED.ins.x;
+                thSLight.linear = thLED.ins.y;
+                thSLight.quadratic = thLED.ins.z;
+
+                //*************1,4.9,1.4ÅäºÏ0.7£¬0.5Ð§¹û²»´í******************
+                // //20,9.7,2.4
+                //thSLight.linear = 13;
+                //thSLight.quadratic = 15.92;
+
+
+                //CalcPointLight(thSLight, normal, fragPos, viewDir);
+                result += CalcSpotLight(thSLight, normal, fragPos, viewDir);
+            }
+        }
+    }
+    return result;
+    //return result/step/step*10;
 
 }
 

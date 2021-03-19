@@ -12,6 +12,9 @@
 //使用方法：首先add主绘制shader，然后可以在主绘制shader下加载led绘制shader，每个led绘制shader加载一个或多个LedStru结构，用于描述LED
 //然后再主循环渲染部分draw，但是D和S设置效果不明显暂时使用整体draw
 extern glm::vec3 ins;
+extern int density;
+extern float cutOff;
+extern float outerCutOff;
 struct LedStru
 {
 	glm::mat4 model;
@@ -72,6 +75,9 @@ public:
 				Mshader.setVec3("LEDA.rd", LshaderItor.model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 				Mshader.setVec3("LEDA.ru", LshaderItor.model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f));
 				Mshader.setVec3("LEDA.ins", ins);	
+				Mshader.setInt("LEDA.density", density);
+				Mshader.setFloat("LEDA.cutOff", cutOff);
+				Mshader.setFloat("LEDA.outerCutOff", outerCutOff);
 			}
 		}
 		return true;
@@ -91,6 +97,9 @@ public:
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
 				
 				Mshader.setVec3("LEDA.ins", ins);
+				Mshader.setInt("LEDA.density", density);
+				Mshader.setFloat("LEDA.cutOff", cutOff);
+				Mshader.setFloat("LEDA.outerCutOff", outerCutOff);
 				Lshadertmp.use();
 				//*************************************工作到此***************************
 				//***********************************需要当shader管理类完成*************
@@ -124,6 +133,9 @@ public:
 				Mshader.setVec3("LEDA.rd", LshaderItor.model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 				Mshader.setVec3("LEDA.ru", LshaderItor.model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f));
 				Mshader.setVec3("LEDA.ins", ins);
+				Mshader.setInt("LEDA.density", density);
+				Mshader.setFloat("LEDA.cutOff", cutOff);
+				Mshader.setFloat("LEDA.outerCutOff", outerCutOff);
 				Lshadertmp.use();
 				//*************************************工作到此***************************
 				//***********************************需要当shader管理类完成*************
