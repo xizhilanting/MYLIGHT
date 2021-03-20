@@ -25,7 +25,10 @@
 #include "conff.h"
 #include "ShaderMgr.h"
 #include "LedMgr.h"
+
 using namespace std;
+
+
 unsigned int amount = 1000;//ÐÐÐÇÊýÁ¿
 unsigned int peopleCount = 1;
 float rate = 0;
@@ -82,6 +85,8 @@ float lastFrame = 0.0f;
 int main()
 {
 	
+	
+
 	GLFWwindow* Window = RC();
 	if (!Window)
 	{
