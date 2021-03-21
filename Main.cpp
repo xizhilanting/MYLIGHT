@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include "Shader.h"
 #include "glm/glm/glm.hpp"
 #include "glm/glm/gtc/matrix_transform.hpp"
@@ -25,9 +26,11 @@
 #include "conff.h"
 #include "ShaderMgr.h"
 #include "LedMgr.h"
-
+#include "FFMpegRW\FFVideoRW.h"
+#include "glImageData.h"
+#include <time.h>
 using namespace std;
-
+#pragma comment(lib,"FFMpegRW.lib ")
 
 unsigned int amount = 1000;//行星数量
 unsigned int peopleCount = 1;
@@ -82,6 +85,34 @@ conff myconf;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+void ffmpeg() {
+	CFFVideoRW video1, video2, video3;
+	CglImageData img;
+
+	video1.ReadMovBeg("onepice.mp4");
+	img.SetNew(video1.m_movWidth, video1.m_movHeight, 3, 3);
+	video2.WriteMovBeg("Out.mov", video1.m_movWidth, video1.m_movHeight, video1.m_fps, video1.m_iCodecType, 0, video1.m_iBitRate);
+	video3.WriteMovBeg("test.png", video1.m_movWidth, video1.m_movHeight);
+	int i, n = video1.m_iNumFrame;
+	time_t t = time(0);
+	for (i = 0; i < n; i++)
+	{
+		video1.ReadMovFrame(i, &img);
+		video2.WriteMovFrame(&img);
+		if (i % 10 == 0)
+			printf("%d(%d)\n", i, n);
+		if (i == 1000)
+			video3.WriteMovFrame(&img);
+	}
+
+
+	video1.ReadMovEnd();
+	video2.WriteMovEnd();
+	video3.WriteMovEnd();
+	time_t t1 = time(0);
+	printf("\n%d帧用时间：%d\n", n, int(t1 - t));
+}
+
 int main()
 {
 	
@@ -131,7 +162,7 @@ int main()
 
 	//地板
 	unsigned int textureIDFloor = LoadTex("wall.jpg");
-	unsigned int LED = LoadTex("wsp.jpg");
+	//unsigned int LED = LoadTex("wsp.jpg");
 	unsigned int floorVBO;
 	glGenBuffers(1, &floorVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
@@ -191,6 +222,10 @@ int main()
 	ledMgr.addLShader(ourShader,LEDShader);
 	ledMgr.DrawLedS(ourShader);
 
+	CFFVideoRW video1;
+	CglImageData img;
+	video1.ReadMovBeg("Out.mov");
+	img.SetNew(video1.m_movWidth, video1.m_movHeight, 3, 3);
 	while (!glfwWindowShouldClose(Window))
 	{
 		//处理输入
@@ -215,7 +250,7 @@ int main()
 			float nowtime = glfwGetTime();
 			float deltime = (nowtime - oldtime) / fpsnum;
 			//cout << "fps= " << 1 / deltime << "（帧每秒）" << endl;
-			cout << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");"<<" 计算密度="<<density<< "(cutOff,outerCutOff)= ( "<<cutOff<<","<<outerCutOff<<" )"<<"  fps= " << 1 / deltime ;
+			cout << fixed << setprecision(1) << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");"<<" 计算密度=" << setprecision(0) <<density << setprecision(2) << "; (cutOff,outerCutOff)=("<<cutOff<<","<<outerCutOff<<")"<<"; fps=" <<1 / deltime <<";";
 			x = ins.x;
 			y = ins.y;
 			z = ins.z;
@@ -256,10 +291,14 @@ int main()
 		ourShader.use();
 		ourShader.setVec3("viewPos", MyCamera.Position);
 		
-		
 
+		int  n = video1.m_iNumFrame;
+		static int i = 0;
+		if (i == n)	i = 0;
 		
-
+		video1.ReadMovFrame(i++, &img);
+		img.reverseData();
+		unsigned int LED = LoadTex(img);
 		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO,LED);
 		
 
@@ -268,6 +307,8 @@ int main()
 	}
 	
 	//glDeleteBuffers(1, &VBO);
+	video1.ReadMovEnd();
+	
 	glfwTerminate();
 	return 0;
 }
