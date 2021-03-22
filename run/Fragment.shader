@@ -189,7 +189,7 @@ vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//¥À4
     float zlen = LEDA[num].rd.z - LEDA[num].ld.z;
     float ylen = LEDA[num].ru.y - LEDA[num].rd.y;
     float minv = 0.001;
-    float disFragLight = dot(normalize(cross(LEDA[num].ld - LEDA[num].rd, LEDA[num].ru - LEDA[num].rd)), fragPos);//æ‡¿Î
+    float disFragLight = dot(normalize(cross( LEDA[num].ru - LEDA[num].rd, LEDA[num].ld - LEDA[num].rd)), fragPos);//æ‡¿Î
     SpotLight thSLight;
     //thSLight.cutOff = 0.8061;
     //thSLight.outerCutOff = 0.5002;
@@ -199,7 +199,7 @@ vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//¥À4
     //thSLight.outerCutOff = 1;
     if (disFragLight <0)	//≈–∂œæ‡¿Î 1.5
     {
-       // return vec3(1, 0, 0);
+        
         int step = stepT*4;
         float stepL = 0.998 / (step - 1);
         for (int i = 0; i < step; i++)
@@ -218,8 +218,7 @@ vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//¥À4
                     thSLight.ambient = color;
                     thSLight.diffuse = color;
                     thSLight.specular = color;
-                    thSLight.direction = vec3(1, 0, 0);
-                        //normalize(cross(LEDA[num].ru - LEDA[num].rd, LEDA[num].ld - LEDA[num].rd));
+                    thSLight.direction = normalize(cross(LEDA[num].ru - LEDA[num].rd, LEDA[num].ld - LEDA[num].rd));
                     thSLight.constant = LEDA[num].ins.x*4;
                     thSLight.linear = LEDA[num].ins.y *4;
                     thSLight.quadratic = LEDA[num].ins.z *5;
@@ -230,7 +229,7 @@ vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//¥À4
         }
     }
     else {
-       // return vec3(0,1, 0);
+       //return vec3(0,1, 0);
         int step = stepT;
         float stepL = 0.998 / (step - 1);
         for (int i = 0; i < step; i++)
@@ -250,8 +249,7 @@ vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//¥À4
                     thSLight.ambient = color;
                     thSLight.diffuse = color;
                     thSLight.specular = color;
-                    thSLight.direction = vec3(1, 0, 0);
-                        //normalize(cross(LEDA[num].ru - LEDA[num].rd,LEDA[num].ld - LEDA[num].rd));
+                    thSLight.direction = normalize(cross(LEDA[num].ru - LEDA[num].rd,LEDA[num].ld - LEDA[num].rd));
                         //vec3(-1, 0, 0);
                     thSLight.constant = LEDA[num].ins.x;
                     thSLight.linear = LEDA[num].ins.y;

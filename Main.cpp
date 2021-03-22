@@ -203,17 +203,6 @@ int main()
 	glBindBufferRange(GL_UNIFORM_BUFFER, 4, uboMatrices, 0, 2 * sizeof(glm::mat4));
 	
 
-	//模型绘制shader中传入LED
-	/*ourShader.use();
-	glActiveTexture(GL_TEXTURE0);
-	ourShader.setFloat("LEDA.SLED", 0);
-	glBindTexture(GL_TEXTURE_2D, LED);
-	ourShader.setVec3("LEDA.ld", glm::vec3(0, 0, 75));
-	ourShader.setVec3("LEDA.rd", glm::vec3(0, 0, 0));
-	ourShader.setVec3("LEDA.ru", glm::vec3(0, 15, 0));
-	ourShader.setVec3("LEDA.ins",ins);*/
-
-	
 	myconf.getPara("ins", ins);
 	myconf.getPara("density", density);
 	myconf.getPara("cutOff", cutOff);
@@ -300,8 +289,7 @@ int main()
 		unsigned int LED = LoadTex(img);
 		vector<unsigned int> LEDT;
 		LEDT.clear();
-		unsigned int wsp = LoadTex("wsp.jpg");
-		unsigned int container = LoadTex("container2.png");
+		//unsigned int wsp = LoadTex("wsp.jpg");
 		//LEDT.push_back(wsp);
 		LEDT.push_back(LED);
 		//LEDT.push_back(container);
@@ -402,12 +390,12 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 
 	//地板
 	ourShader.use();
-	glActiveTexture(GL_TEXTURE0);
-	ourShader.setFloat("material.diffuse", 0);
-	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
-	glActiveTexture(GL_TEXTURE1);
-	ourShader.setFloat("material.specular", 1);
-	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
+	//glActiveTexture(GL_TEXTURE0);
+	//ourShader.setFloat("material.diffuse", 0);
+	//glBindTexture(GL_TEXTURE_2D, textureIDFloor);
+	//glActiveTexture(GL_TEXTURE1);
+	//ourShader.setFloat("material.specular", 1);
+	//glBindTexture(GL_TEXTURE_2D, textureIDFloor);
 	ourShader.setVec3("viewPos", MyCamera.Position);
 	int row = 15, col = 15;
 	float rate = 5;

@@ -152,9 +152,9 @@ public:
 				glActiveTexture(GL_TEXTURE0);
 				Lshadertmp.setInt("material.diffuse", 0);
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
-				glActiveTexture(GL_TEXTURE1);
-				Lshadertmp.setInt("material.specular", 1);
-				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
+				//glActiveTexture(GL_TEXTURE1);
+				//Lshadertmp.setInt("material.specular", 1);
+				//glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
 				//Lshadertmp.setVec3("viewPos", MyCamera.Position);
 				glBindVertexArray(LshaderItor.VAO);
 				Lshadertmp.setMat4("model", LshaderItor.model);
