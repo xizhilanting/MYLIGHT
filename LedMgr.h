@@ -18,21 +18,21 @@ extern float outerCutOff;
 struct LedStru
 {
 	glm::mat4 model;
-	int tex;
+	unsigned int tex;
 	unsigned int VAO;
-	LedStru(glm::mat4 thmodel,int thtex,unsigned int thVAO):model(thmodel),tex(thtex),VAO(thVAO){}
+	LedStru(glm::mat4 thmodel,unsigned int thtex,unsigned int thVAO):model(thmodel),tex(thtex),VAO(thVAO){}
 };
 class LedMgr
 {
 public:
 	LedMgr();
 	~LedMgr();
-	void addMShader(Shader shader)
+	void addMShader(Shader &shader)
 	{
 		if (!m_Mshader.count(shader.ID))
 			m_Mshader[shader.ID];
 	}
-	void addLShader(Shader Mshader,Shader Lshader)
+	void addLShader(Shader &Mshader,Shader &Lshader)
 	{
 		if (m_Mshader.count(Mshader.ID))
 		{
@@ -53,7 +53,7 @@ public:
 			m_Mshader[Mshader.ID][Lshader.ID] = itor;
 		}
 	}
-	void addStru(Shader Lshader, LedStru stru)
+	void addStru(Shader &Lshader, LedStru &stru)
 	{
 		if (!m_Lshader.count(Lshader.ID))
 		{
@@ -63,7 +63,10 @@ public:
 			m_Lshader[Lshader.ID].push_back(stru);
 		}
 	}
-	bool DrawLedS(Shader Mshader)
+	void printSize() {
+		cout << "LEDmGRSIZE= "<<m_Mshader.size() << " " << m_Lshader.size() << " " << m_Lshader.begin()->second.size() << endl;
+	}
+	bool DrawLedS(Shader &Mshader)
 	{
 		for (auto MshaderSecItor : m_Mshader[Mshader.ID])
 		{
@@ -82,7 +85,7 @@ public:
 		}
 		return true;
 	}
-	bool DrawLedD(Shader Mshader)
+	bool DrawLedD(Shader &Mshader)
 	{
 		int texIndex = 0;
 		for (auto MshaderSecItor : m_Mshader[Mshader.ID])
@@ -116,34 +119,41 @@ public:
 		}
 		return true;
 	}
-	bool DrawLed(Shader Mshader)
+	bool DrawLed(Shader &Mshader)
 	{
 		int texIndex = 0;
+		int be = 2;
 		for (auto MshaderSecItor : m_Mshader[Mshader.ID])
 		{
-			Mshader.use();
-			Mshader.setFloat("LEDA.SLED", texIndex++);
+			//	map<unsigned int, map<unsigned int, map<unsigned int, vector<LedStru>>::iterator>> m_Mshader;
 			Shader Lshadertmp;
 			Lshadertmp.ID = MshaderSecItor.first;
+			//cout << "  ---------" << endl;
 			for (auto LshaderItor : MshaderSecItor.second->second)
 			{
 				Mshader.use();
+				Mshader.setInt("LEDA[" + to_string(texIndex)+"].SLED", texIndex+ be);
+				glActiveTexture(GL_TEXTURE0+texIndex + be);
+				//cout << texIndex << " " << LshaderItor.tex << endl;
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
-				Mshader.setVec3("LEDA.ld", LshaderItor.model * glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f));
-				Mshader.setVec3("LEDA.rd", LshaderItor.model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
-				Mshader.setVec3("LEDA.ru", LshaderItor.model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f));
-				Mshader.setVec3("LEDA.ins", ins);
-				Mshader.setInt("LEDA.density", density);
-				Mshader.setFloat("LEDA.cutOff", cutOff);
-				Mshader.setFloat("LEDA.outerCutOff", outerCutOff);
-				Lshadertmp.use();
+				//cout << LshaderItor.tex << " "<<"LEDA[" + to_string(texIndex)+"].SLED"<<" ";
+				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].ld", LshaderItor.model * glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f));
+				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].rd", LshaderItor.model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].ru", LshaderItor.model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f));
+				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].ins", ins);
+				Mshader.setInt("LEDA[" + to_string(texIndex) + "].density", density);
+				Mshader.setFloat("LEDA[" + to_string(texIndex) + "].cutOff", cutOff);
+				Mshader.setFloat("LEDA[" + to_string(texIndex) + "].outerCutOff", outerCutOff);
+				texIndex++;
+				//be++;
 				//*************************************工作到此***************************
 				//***********************************需要当shader管理类完成*************
+				Lshadertmp.use();
 				glActiveTexture(GL_TEXTURE0);
-				Lshadertmp.setFloat("material.diffuse", 0);
+				Lshadertmp.setInt("material.diffuse", 0);
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
 				glActiveTexture(GL_TEXTURE1);
-				Lshadertmp.setFloat("material.specular", 1);
+				Lshadertmp.setInt("material.specular", 1);
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
 				//Lshadertmp.setVec3("viewPos", MyCamera.Position);
 				glBindVertexArray(LshaderItor.VAO);
@@ -151,7 +161,12 @@ public:
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 		}
+		//cout << endl;
 		return true;
+	}
+	void clear(unsigned int Lshaderid)
+	{
+		m_Lshader[Lshaderid].clear();
 	}
 private:
 	map<unsigned int, map<unsigned int, map<unsigned int, vector<LedStru>>::iterator>> m_Mshader;

@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include "Shader.h"
 #include "glm/glm/glm.hpp"
 #include "glm/glm/gtc/matrix_transform.hpp"
@@ -49,7 +50,7 @@ void processInput(GLFWwindow *window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void vis(bool firstControl);
 void flloLeader();
-void renderScene(Shader shader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, unsigned int LED);
+void renderScene(Shader shader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, vector<unsigned int> LED);
 glm::mat4* InitPlanetData();
 void drawPoint(Shader pointPtrShader, unsigned int pointVAO, vector<glm::vec3> pos);
 GLFWwindow* RC();
@@ -291,16 +292,27 @@ int main()
 		ourShader.use();
 		ourShader.setVec3("viewPos", MyCamera.Position);
 		
-
 		int  n = video1.m_iNumFrame;
 		static int i = 0;
 		if (i == n)	i = 0;
-		
 		video1.ReadMovFrame(i++, &img);
 		img.reverseData();
 		unsigned int LED = LoadTex(img);
-		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO,LED);
+		vector<unsigned int> LEDT;
+		LEDT.clear();
+		unsigned int wsp = LoadTex("wsp.jpg");
+		unsigned int container = LoadTex("container2.png");
+		//LEDT.push_back(wsp);
+		LEDT.push_back(LED);
+		//LEDT.push_back(container);
+		//LEDT.push_back(LED);
 		
+		//LEDT.push_back(LED);
+		//cout << "--------";
+		//cout << "floor="<< textureIDFloor <<" LED="<<LED<<" wsp="<<wsp  << endl;
+		
+		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO,LEDT);
+		//ledMgr.printSize();
 
 		glfwSwapBuffers(Window);
 		glfwPollEvents();
@@ -347,10 +359,8 @@ void drawPoint(Shader pointPtrShader,unsigned int pointVAO, vector<glm::vec3> po
 
 	//结束
 }
-void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, unsigned int LED)
+void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, vector<unsigned int> LED)
 {
-
-
 	static bool first = true;
 
 	for (unsigned int i = 0; i<peopleCount; i++)
@@ -392,11 +402,11 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 
 	//地板
 	ourShader.use();
-	glActiveTexture(GL_TEXTURE2);
-	ourShader.setFloat("material.diffuse", 2);
+	glActiveTexture(GL_TEXTURE0);
+	ourShader.setFloat("material.diffuse", 0);
 	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
-	glActiveTexture(GL_TEXTURE3);
-	ourShader.setFloat("material.specular", 3);
+	glActiveTexture(GL_TEXTURE1);
+	ourShader.setFloat("material.specular", 1);
 	glBindTexture(GL_TEXTURE_2D, textureIDFloor);
 	ourShader.setVec3("viewPos", MyCamera.Position);
 	int row = 15, col = 15;
@@ -413,34 +423,43 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 	}
+
 	//LED
-	/*LEDShader.use();
-	glActiveTexture(GL_TEXTURE0);
-	LEDShader.setFloat("material.diffuse", 0);
-	glBindTexture(GL_TEXTURE_2D, LED);
-	glActiveTexture(GL_TEXTURE1);
-	LEDShader.setFloat("material.specular", 1);
-	glBindTexture(GL_TEXTURE_2D, LED);
-	LEDShader.setVec3("viewPos", MyCamera.Position);
-	glBindVertexArray(floorVAO);*/
+/*LEDShader.use();
+glActiveTexture(GL_TEXTURE0);
+LEDShader.setFloat("material.diffuse", 0);
+glBindTexture(GL_TEXTURE_2D, LED);
+glActiveTexture(GL_TEXTURE1);
+LEDShader.setFloat("material.specular", 1);
+glBindTexture(GL_TEXTURE_2D, LED);
+LEDShader.setVec3("viewPos", MyCamera.Position);
+glBindVertexArray(floorVAO);*/
 	int rra = 15;
-	glm::mat4 model;
-	//model = glm::translate(model, glm::vec3(-3.5, 0.0f, 0));
-	model = glm::scale(model, glm::vec3(1, rra , rra*rate));
-	model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
-	model = glm::rotate(model, glm::radians(-90.0f),glm::vec3(0,0,1));
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
-	model = glm::translate(model, glm::vec3(0, -0.50f, -0.50f));
-	/*LEDShader.setMat4("model", model);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	*/
-	ledMgr.addStru(LEDShader, LedStru(model, LED, floorVAO));
+	int jj = 0;
+	ledMgr.clear(LEDShader.ID);
+	for (auto i : LED)
+	{
+
+		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(25 * jj, 0.0f, 0));
+		//model = glm::translate(model, glm::vec3(-3.5, 0.0f, 0));
+		model = glm::scale(model, glm::vec3(1, rra, rra * rate));
+		model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
+		model = glm::rotate(model, glm::radians(180.0f*jj), glm::vec3(0,1, 0));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 0, 1));
+		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
+		model = glm::translate(model, glm::vec3(0, -0.50f, -0.50f));
+		/*LEDShader.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		*/
+		ledMgr.addStru(LEDShader, LedStru(model, i, floorVAO));
+		jj++;
+	}
 	/*if (first)
 	{
 		ledMgr.DrawLedS(ourShader);			//静态动态分类，后期再说吧
 	}*/
 	ledMgr.DrawLed(ourShader);
-
 
 	if (first)
 	{
