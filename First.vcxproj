@@ -138,9 +138,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\4_MyFloder\glad.c" />
     <ClCompile Include="Main.cpp" />
-    <Text Include="run\config">
-      <FileType>Document</FileType>
-    </Text>
     <ClCompile Include="源.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -170,44 +167,59 @@
     <ClInclude Include="vis.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="0.delayWork" />
-    <None Include="run\3.1.2.shadow_mapping_depth.fs" />
-    <None Include="run\3.1.2.shadow_mapping_depth.vs" />
-    <None Include="run\Blendfragment.shader" />
-    <None Include="run\Fragment.shader" />
-    <None Include="run\InstanceFragment.shader" />
-    <None Include="run\InstanceVertex.shader" />
-    <None Include="run\LEDfragment.shader" />
-    <None Include="run\light.shader" />
-    <None Include="run\mirCubeFragment.shader" />
-    <None Include="run\mirCubeVertex.shader" />
-    <None Include="run\MirFragment.shader" />
-    <None Include="run\MirVertex.shader" />
-    <None Include="run\pointFragment.shader" />
-    <None Include="run\pointVertex.shader" />
-    <None Include="run\RGBAfragment.shader" />
-    <None Include="run\skycubeFragment.shader" />
-    <None Include="run\skycubeVertex.shader" />
-    <None Include="run\testFragment.shader" />
-    <None Include="run\testexploGeo.shader" />
-    <None Include="run\testnorlFragment.shader" />
-    <None Include="run\testnorlGeo.shader" />
-    <None Include="run\testnorlVertex.shader" />
-    <None Include="run\testvertex.shader" />
-    <None Include="run\Vertex.shader" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="run\awesomeface.png" />
-    <Image Include="run\blending_transparent_window.png" />
-    <Image Include="run\container2.png" />
-    <Image Include="run\container2_specular.png" />
-    <Image Include="run\grass.png" />
-    <Image Include="run\lighting_maps_specular_color.png" />
-    <Image Include="run\matrix.jpg" />
-    <Image Include="run\wall.jpg" />
+    <None Include="run\resources\0.delayWork" />
+    <None Include="run\resources\config\config" />
+    <None Include="run\resources\shader\3.1.2.shadow_mapping_depthfragment.shader" />
+    <None Include="run\resources\shader\3.1.2.shadow_mapping_depthvertex.shader" />
+    <None Include="run\resources\shader\Blendfragment.shader" />
+    <None Include="run\resources\shader\Fragment.shader" />
+    <None Include="run\resources\shader\InstanceFragment.shader" />
+    <None Include="run\resources\shader\InstanceVertex.shader" />
+    <None Include="run\resources\shader\LEDfragment.shader" />
+    <None Include="run\resources\shader\light.shader" />
+    <None Include="run\resources\shader\mirCubeFragment.shader" />
+    <None Include="run\resources\shader\mirCubeVertex.shader" />
+    <None Include="run\resources\shader\MirFragment.shader" />
+    <None Include="run\resources\shader\MirVertex.shader" />
+    <None Include="run\resources\shader\pointFragment.shader" />
+    <None Include="run\resources\shader\pointVertex.shader" />
+    <None Include="run\resources\shader\RGBAfragment.shader" />
+    <None Include="run\resources\shader\skycubeFragment.shader" />
+    <None Include="run\resources\shader\skycubeVertex.shader" />
+    <None Include="run\resources\shader\testexploGeo.shader" />
+    <None Include="run\resources\shader\testFragment.shader" />
+    <None Include="run\resources\shader\testnorlFragment.shader" />
+    <None Include="run\resources\shader\testnorlGeo.shader" />
+    <None Include="run\resources\shader\testnorlVertex.shader" />
+    <None Include="run\resources\shader\testvertex.shader" />
+    <None Include="run\resources\shader\test_depth_Fragment.shader" />
+    <None Include="run\resources\shader\Vertex.shader" />
+    <None Include="run\resources\shader\Vertex1.shader" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="First.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="run\resources\texture\awesomeface.png" />
+    <Image Include="run\resources\texture\blending_transparent_window.png" />
+    <Image Include="run\resources\texture\container2.png" />
+    <Image Include="run\resources\texture\container2_specular.png" />
+    <Image Include="run\resources\texture\grass.png" />
+    <Image Include="run\resources\texture\LED.jpg" />
+    <Image Include="run\resources\texture\lighting_maps_specular_color.png" />
+    <Image Include="run\resources\texture\matrix.jpg" />
+    <Image Include="run\resources\texture\rhtest.png" />
+    <Image Include="run\resources\texture\test.png" />
+    <Image Include="run\resources\texture\wall.jpg" />
+    <Image Include="run\resources\texture\wood.png" />
+    <Image Include="run\resources\texture\wsp.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="run\resources\tmp\file.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="run\resources\video\onepice.mp4" />
+    <Media Include="run\resources\video\Out.mov" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

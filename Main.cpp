@@ -18,7 +18,7 @@
 #include<fstream>
 #include "IObjectLight.h"
 #include "LoadTex.h"
-#include "GressD.h"
+//#include "GressD.h"
 #include "vis.h"
 #include "moveStep.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -32,7 +32,10 @@
 #include <time.h>
 using namespace std;
 #pragma comment(lib,"FFMpegRW.lib ")
-
+string texPath("resources/texture/");
+string modelPath("resources/model/");
+string shaderPath("resources/shader/");
+string configPath("resources/config/config");
 unsigned int amount = 1000;//行星数量
 unsigned int peopleCount = 1;
 float rate = 0;
@@ -82,7 +85,7 @@ float outerCutOff = 0.5002;
 //两个灯光控制类
 IObjectLight IoLight;
 //脚本类
-conff myconf;
+conff myconf(configPath);
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -125,12 +128,12 @@ int main()
 		return -1;
 	}
 	//加载shader
-	Shader ourShader("Vertex.shader", "Fragment.shader");
-	Shader LEDShader("Vertex.shader", "LEDfragment.shader");
-	Shader pointPtrShader("pointVertex.shader", "pointFragment.shader");
+	Shader ourShader((shaderPath + "Vertex.shader").c_str(), (shaderPath+"Fragment.shader").c_str());
+	Shader LEDShader((shaderPath+"Vertex.shader").c_str(), (shaderPath + "LEDfragment.shader").c_str());
+	Shader pointPtrShader((shaderPath + "pointVertex.shader").c_str(), (shaderPath + "pointFragment.shader").c_str());
 	//加载模型
 	//Model ourModel("nanosuit/nanosuit.obj");
-	Model ourModel("house/house.obj");
+	Model ourModel((modelPath + "house/house.obj").c_str());
 
 
 	//绑定矩形数据
@@ -162,7 +165,7 @@ int main()
 	IoLight.addDLight(LdirLight);*/
 
 	//地板
-	unsigned int textureIDFloor = LoadTex("wall.jpg");
+	unsigned int textureIDFloor = LoadTex(texPath+"wall.jpg");
 	//unsigned int LED = LoadTex("wsp.jpg");
 	unsigned int floorVBO;
 	glGenBuffers(1, &floorVBO);
@@ -215,7 +218,7 @@ int main()
 	CFFVideoRW video1;
 	CglImageData img;
 	video1.ReadMovBeg("F:/u/信条/Tene.mp4");
-	unsigned int wsp = LoadTex("wsp.jpg");
+	
 	img.SetNew(video1.m_movWidth, video1.m_movHeight, 3, 3);
 	while (!glfwWindowShouldClose(Window))
 	{
@@ -279,28 +282,20 @@ int main()
 			box.x.min, box.y.min, box.z.min);
 
 
-		ourShader.use();
-		ourShader.setVec3("viewPos", MyCamera.Position);
-
-		int  n = video1.m_iNumFrame;
+		static int  n = video1.m_iNumFrame;
 		static int i = 5;
 		if (i == n)	i = 5;
 		//video1.ReadMovFrame(90, &img);
 		video1.ReadMovFrame(i++, &img);
 		img.reverseData();
-		unsigned int LED = LoadTex(img);
+		static unsigned int LED = -1;
+		LED = LoadTex(img, LED);
+		//static unsigned int wsp = -1;
+		//wsp = LoadTex(texPath+"wsp.jpg",wsp);
 		vector<unsigned int> LEDT;
 		LEDT.clear();
-		
 		LEDT.push_back(LED);
-		LEDT.push_back(wsp);
-
-		//LEDT.push_back(container);
-		//LEDT.push_back(LED);
-
-		//LEDT.push_back(LED);
-		//cout << "--------";
-		//cout << "floor="<< textureIDFloor <<" LED="<<LED<<" wsp="<<wsp  << endl;
+		//LEDT.push_back(wsp);
 
 		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO, LEDT, video1.m_movHeight, video1.m_movWidth);
 		//ledMgr.printSize();
@@ -398,7 +393,6 @@ void renderScene(Shader &ourShader, Shader &LEDShader, Model &ourModel, unsigned
 	//glActiveTexture(GL_TEXTURE1);
 	//ourShader.setFloat("material.specular", 1);
 	//glBindTexture(GL_TEXTURE_2D, textureIDFloor);
-	ourShader.setVec3("viewPos", MyCamera.Position);
 	int row = 15, col = 15;
 	float rate = 5;
 	glBindVertexArray(floorVAO);
@@ -435,7 +429,7 @@ glBindVertexArray(floorVAO);*/
 		glm::mat4 model;
 		model = glm::translate(model, glm::vec3(60 * jj, 0.0f, 0));
 		//model = glm::translate(model, glm::vec3(-3.5, 0.0f, 0));
-		model = glm::scale(model, glm::vec3(1, 2*height / thrate, 2*width / thrate));
+		model = glm::scale(model, glm::vec3(1, 2* height / thrate, 2*width / thrate));
 		model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
 		model = glm::rotate(model, glm::radians(180.0f * jj), glm::vec3(0, 1, 0));
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 0, 1));

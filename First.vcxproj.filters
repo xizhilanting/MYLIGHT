@@ -13,6 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="资源文件\config">
+      <UniqueIdentifier>{b7230d4a-1dcf-4d7d-95bd-4a07745b1c05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\shader">
+      <UniqueIdentifier>{43e56ac4-9b9a-49c4-8633-35d5faee55e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\texture">
+      <UniqueIdentifier>{78d8c053-fcb8-4242-b4da-8047353feb35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\tmp">
+      <UniqueIdentifier>{943c8a32-c91b-4d0b-b16f-d61e0b8d4d39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\video">
+      <UniqueIdentifier>{7bfa9cbe-1bf9-433b-b071-dfc1c0bfd882}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -100,107 +115,90 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="run\Fragment.shader">
+    <None Include="run\resources\config\config">
+      <Filter>资源文件\config</Filter>
+    </None>
+    <None Include="run\resources\shader\Blendfragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\Fragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\InstanceFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\InstanceVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\LEDfragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\light.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\mirCubeFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\mirCubeVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\MirFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\MirVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\pointFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\pointVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\RGBAfragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\skycubeFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\skycubeVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\test_depth_Fragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testexploGeo.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testnorlFragment.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testnorlGeo.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testnorlVertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\testvertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\Vertex.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\shader\Vertex1.shader">
+      <Filter>资源文件\shader</Filter>
+    </None>
+    <None Include="run\resources\0.delayWork">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="run\Vertex.shader">
-      <Filter>资源文件</Filter>
+    <None Include="run\resources\shader\3.1.2.shadow_mapping_depthfragment.shader">
+      <Filter>资源文件\shader</Filter>
     </None>
-    <None Include="run\light.shader">
-      <Filter>资源文件</Filter>
+    <None Include="run\resources\shader\3.1.2.shadow_mapping_depthvertex.shader">
+      <Filter>资源文件\shader</Filter>
     </None>
-    <None Include="run\RGBAfragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\Blendfragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\MirVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\MirFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testvertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\skycubeVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\skycubeFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\mirCubeVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\mirCubeFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testexploGeo.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testnorlGeo.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testnorlVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\testnorlFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\InstanceVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\InstanceFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\3.1.2.shadow_mapping_depth.fs">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\3.1.2.shadow_mapping_depth.vs">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\LEDfragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\pointVertex.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="run\pointFragment.shader">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="0.delayWork">
-      <Filter>资源文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="run\wall.jpg">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\awesomeface.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\container2.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\container2_specular.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\lighting_maps_specular_color.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\matrix.jpg">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\grass.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="run\blending_transparent_window.png">
-      <Filter>资源文件</Filter>
-    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="First.rc">
@@ -208,8 +206,57 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="run\config">
-      <Filter>资源文件</Filter>
+    <Image Include="run\resources\texture\awesomeface.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\blending_transparent_window.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\container2.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\container2_specular.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\grass.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\LED.jpg">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\lighting_maps_specular_color.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\matrix.jpg">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\rhtest.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\test.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\wall.jpg">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\wood.png">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+    <Image Include="run\resources\texture\wsp.jpg">
+      <Filter>资源文件\texture</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="run\resources\tmp\file.txt">
+      <Filter>资源文件\tmp</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="run\resources\video\onepice.mp4">
+      <Filter>资源文件\video</Filter>
+    </Media>
+    <Media Include="run\resources\video\Out.mov">
+      <Filter>资源文件\video</Filter>
+    </Media>
   </ItemGroup>
 </Project>

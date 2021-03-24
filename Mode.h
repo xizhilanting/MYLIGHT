@@ -15,7 +15,7 @@ class Model
 {
 public:
 
-	Model(char* path)
+	Model(const char* path)
 	{
 		loadMode(path);
 	}

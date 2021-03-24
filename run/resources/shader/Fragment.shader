@@ -122,7 +122,8 @@ void main()
 }
 //屏蔽掉其他光照仅留LED
 //result = vec3(texture(LEDA[0].SLED, TexCoords)* texture(LEDA[1].SLED , TexCoords));
-for(int i=0;i< LedNum;i++)
+//for(int i=0;i< LedNum;i++)
+for (int i = 0; i < 1; i++)
     result += CalcLedLight4(i,norm, FragPos, viewDir);
 //result = vec3(texture(material.specular, TexCoords));
 

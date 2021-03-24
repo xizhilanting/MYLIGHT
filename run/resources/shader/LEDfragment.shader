@@ -91,7 +91,7 @@ void main()
 //vec3 lighting = ((1.0 - shadow) * (result)) ;    
 //	//“ı”∞Ω· ¯
 //	 FragColor =vec4((lighting+result), 1);
-result=vec3(texture(material.diffuse, TexCoords))*2;
+result=vec3(texture(material.diffuse, TexCoords));
 
 	FragColor =vec4(result, 1);
 

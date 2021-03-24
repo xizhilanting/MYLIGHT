@@ -7,10 +7,20 @@
 #include<fstream>
 #include "FFMpegRW\FFVideoRW.h"
 #include "glImageData.h"
+#include<set>
 //通过filename输入纹理路径，绑定到textureID中进行返回（用unsigned int进行接收）。支持RGD\RGB\RGBA
-unsigned int LoadTex(std::string filename) {
+static set<unsigned int> totalTex;
+unsigned int LoadTex(std::string filename,unsigned int texNum=-1) {
 	unsigned int textureID;
-	glGenTextures(1, &textureID);
+	if (!totalTex.count(texNum))
+	{
+		glGenTextures(1, &textureID);
+		totalTex.insert(textureID);
+	}
+	else {
+		return texNum;
+	}
+
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
 	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
@@ -18,15 +28,6 @@ unsigned int LoadTex(std::string filename) {
 	//STBIDEF stbi_uc* stbi_load(char const* filename, int* x, int* y, int* comp, int req_comp)
 	if (data)
 	{
-		static bool first = true;
-		if (first)
-		{
-			first = false;
-			ofstream fp("a.dat", std::ios::binary);
-			fp.write((const char*)data, sizeof(unsigned char)*10000);
-			fp.close();
-			cout << filename << " write down!" << endl;
-		}
 		GLenum format;
 		if (nrComponents == 1)
 		{
@@ -66,15 +67,18 @@ unsigned int LoadTex(std::string filename) {
 	return textureID;
 }
 
-unsigned int LoadTex(CglImageData &imgdata) {
-	//static bool first = true;
-	//static unsigned int textureID;
-	//if (first) {
-	//	glGenTextures(1, &textureID);
-	//	first = false;
-	//}
+unsigned int LoadTex(CglImageData& imgdata, unsigned int texNum = -1) {
+
 	unsigned int textureID;
-	glGenTextures(1, &textureID);
+	if (!totalTex.count(texNum))
+	{
+		glGenTextures(1, &textureID);
+		totalTex.insert(textureID);
+	}
+	else {
+		textureID = texNum;
+	}
+	
 	//stbi_set_flip_vertically_on_load(true);
 	int width = imgdata.m_Width;
 	int height=imgdata.m_Height;
@@ -87,17 +91,14 @@ unsigned int LoadTex(CglImageData &imgdata) {
 		if (nrComponents == 1)
 		{
 			format = GL_RED;
-			//cout << "RED" << endl;
 		}
 		else if (nrComponents == 3)
 		{
-			format = GL_BGR;
-			//cout << "rgb" << endl;
+			format = GL_BGR;	//视频通常是BGR的
 		}
 		else if (nrComponents == 4)
 		{
 			format = GL_RGBA;
-			//cout << "rgba" << endl;
 		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);

@@ -125,10 +125,8 @@ public:
 		int be = 0;
 		for (auto MshaderSecItor : m_Mshader[Mshader.ID])
 		{
-			//	map<unsigned int, map<unsigned int, map<unsigned int, vector<LedStru>>::iterator>> m_Mshader;
 			Shader Lshadertmp;
 			Lshadertmp.ID = MshaderSecItor.first;
-			//cout << "  ---------" << endl;
 			for (auto LshaderItor : MshaderSecItor.second->second)
 			{
 				Mshader.use();

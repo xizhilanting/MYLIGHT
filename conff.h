@@ -17,7 +17,8 @@ string to_string(glm::mat4 mat4);
 class conff
 {
 public:
-	conff();
+	string m_path;
+	conff(string path="resource/config/config");
 	~conff();
 	//int
 	template<typename T>
@@ -49,13 +50,14 @@ private:
 
 };
 
-conff::conff()
+conff::conff(string path )
 {
 	ifstream readFile;
-	readFile.open("config");
+	m_path = path;
+	readFile.open(m_path);
 	if (!readFile.is_open())
 	{
-		cout << "Error open" << endl;
+		cout << "Error open " + m_path << endl;
 	}
 	else
 	{
@@ -74,17 +76,17 @@ conff::conff()
 	}
 	readFile.close();
 	//Çå¿Õ
-	fstream fs("config", fstream::out | ios_base::trunc);
+	fstream fs(m_path, fstream::out | ios_base::trunc);
 	fs.close();
 }
 
 conff::~conff()
 {
 	ofstream writeFile;
-	writeFile.open("config");
+	writeFile.open(m_path);
 	if (!writeFile.is_open())
 	{
-		cout << "Error write open" << endl;
+		cout << "Error write open"<< m_path << endl;
 	}
 	else
 	{
