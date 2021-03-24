@@ -67,11 +67,11 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 	vec3 result;
-	// 第一阶段：定向光照
-     result = CalcDirLight(dirLight, norm, viewDir);
-    // 第二阶段：点光源
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
-        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
+	/// 第一阶段：定向光照
+   // result = CalcDirLight(dirLight, norm, viewDir);
+   /// 第二阶段：点光源
+   ///for(int i = 0; i < NR_POINT_LIGHTS; i++)
+   //    result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
     // 第三阶段：聚光
     //result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
 //	if(gl_FragCoord.x < 400)
@@ -91,7 +91,7 @@ void main()
 //vec3 lighting = ((1.0 - shadow) * (result)) ;    
 //	//阴影结束
 //	 FragColor =vec4((lighting+result), 1);
-result=vec3(texture(material.diffuse, TexCoords));
+result=vec3(texture(material.diffuse, TexCoords))*2;
 
 	FragColor =vec4(result, 1);
 

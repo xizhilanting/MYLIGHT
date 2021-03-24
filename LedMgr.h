@@ -122,7 +122,7 @@ public:
 	bool DrawLed(Shader &Mshader)
 	{
 		int texIndex = 0;
-		int be = 2;
+		int be = 0;
 		for (auto MshaderSecItor : m_Mshader[Mshader.ID])
 		{
 			//	map<unsigned int, map<unsigned int, map<unsigned int, vector<LedStru>>::iterator>> m_Mshader;
@@ -134,9 +134,7 @@ public:
 				Mshader.use();
 				Mshader.setInt("LEDA[" + to_string(texIndex)+"].SLED", texIndex+ be);
 				glActiveTexture(GL_TEXTURE0+texIndex + be);
-				//cout << texIndex << " " << LshaderItor.tex << endl;
 				glBindTexture(GL_TEXTURE_2D, LshaderItor.tex);
-				//cout << LshaderItor.tex << " "<<"LEDA[" + to_string(texIndex)+"].SLED"<<" ";
 				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].ld", LshaderItor.model * glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f));
 				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].rd", LshaderItor.model * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 				Mshader.setVec3("LEDA[" + to_string(texIndex) + "].ru", LshaderItor.model * glm::vec4(0.5f, 0.5f, -0.5f, 1.0f));

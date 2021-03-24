@@ -46,11 +46,11 @@ glm::vec3 curMousePos;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 //void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow* window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void vis(bool firstControl);
 void flloLeader();
-void renderScene(Shader shader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, vector<unsigned int> LED);
+void renderScene(Shader &shader, Shader& LEDShader, Model& ourModel, unsigned int& textureIDFloor, unsigned int& floorVAO, vector<unsigned int>& LED, int& height, int& weight);
 glm::mat4* InitPlanetData();
 void drawPoint(Shader pointPtrShader, unsigned int pointVAO, vector<glm::vec3> pos);
 GLFWwindow* RC();
@@ -75,7 +75,7 @@ const float distal = 300.0f;
 //灯光强度ins
 glm::vec3 ins(1, 1, 1);
 //LED计算密度
-int density=50;
+int density = 50;
 //脚本控制的光角度
 float cutOff = 0.8061;
 float outerCutOff = 0.5002;
@@ -116,8 +116,8 @@ void ffmpeg() {
 
 int main()
 {
-	
-	
+
+
 
 	GLFWwindow* Window = RC();
 	if (!Window)
@@ -131,7 +131,7 @@ int main()
 	//加载模型
 	//Model ourModel("nanosuit/nanosuit.obj");
 	Model ourModel("house/house.obj");
-	
+
 
 	//绑定矩形数据
 	unsigned int pointVBO, pointVAO;
@@ -178,61 +178,62 @@ int main()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-	
+
 	// 在此之前不要忘记首先 use 对应的着色器程序（来设定uniform）
 	ourShader.use();
 	ourShader.setFloat("material.shininess", 64.0f);
-	
+
 
 	//接口块
 		//绑定shader中的uniform
 	unsigned int uniformOur = glGetUniformBlockIndex(ourShader.ID, "Matrices");
 	unsigned int uniformLED = glGetUniformBlockIndex(LEDShader.ID, "Matrices");
 	unsigned int uniformpoint = glGetUniformBlockIndex(pointPtrShader.ID, "Matrices");
-	
-	
-	glUniformBlockBinding(ourShader.ID, uniformOur,4);
+
+
+	glUniformBlockBinding(ourShader.ID, uniformOur, 4);
 	glUniformBlockBinding(LEDShader.ID, uniformLED, 4);
 	glUniformBlockBinding(pointPtrShader.ID, uniformpoint, 4);
-		//生成一个空的接口块		
+	//生成一个空的接口块		
 	unsigned int uboMatrices;
 	glGenBuffers(1, &uboMatrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 4, uboMatrices, 0, 2 * sizeof(glm::mat4));
-	
+
 
 	myconf.getPara("ins", ins);
 	myconf.getPara("density", density);
 	myconf.getPara("cutOff", cutOff);
 	myconf.getPara("outerCutOff", outerCutOff);
-	
+
 	ledMgr.addMShader(ourShader);
-	ledMgr.addLShader(ourShader,LEDShader);
+	ledMgr.addLShader(ourShader, LEDShader);
 	ledMgr.DrawLedS(ourShader);
 
 	CFFVideoRW video1;
 	CglImageData img;
-	video1.ReadMovBeg("Out.mov");
+	video1.ReadMovBeg("F:/u/信条/Tene.mp4");
+	unsigned int wsp = LoadTex("wsp.jpg");
 	img.SetNew(video1.m_movWidth, video1.m_movHeight, 3, 3);
 	while (!glfwWindowShouldClose(Window))
 	{
 		//处理输入
 		processInput(Window);
-		
-		
+
+
 		glEnable(GL_DEPTH_TEST);
 		//渲染
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		//test...
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		static int tocount = 0;
-		
+
 		static float oldtime = glfwGetTime();
 		static bool notfirst = false;
 		static int fpsnum = 10;
-		if (tocount % fpsnum == 0&&notfirst)
+		if (tocount % fpsnum == 0 && notfirst)
 		{
 			static float x = ins.x;
 			static float y = ins.y;
@@ -240,7 +241,7 @@ int main()
 			float nowtime = glfwGetTime();
 			float deltime = (nowtime - oldtime) / fpsnum;
 			//cout << "fps= " << 1 / deltime << "（帧每秒）" << endl;
-			cout << fixed << setprecision(1) << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");"<<" 计算密度=" << setprecision(0) <<density << setprecision(2) << "; (cutOff,outerCutOff)=("<<cutOff<<","<<outerCutOff<<")"<<"; fps=" <<1 / deltime <<";";
+			cout << fixed << setprecision(1) << "\r ins= (" << ins.x << "," << ins.y << "," << ins.z << ");" << " 计算密度=" << setprecision(0) << density << setprecision(2) << "; (cutOff,outerCutOff)=(" << cutOff << "," << outerCutOff << ")" << "; fps=" << 1 / deltime << ";";
 			x = ins.x;
 			y = ins.y;
 			z = ins.z;
@@ -254,7 +255,7 @@ int main()
 		ourShader.setVec3("LEDA.ins", ins);*/
 		//设置公用的两个矩阵(另一个放在改变视角函数中)
 		projection = glm::perspective(glm::radians(MyCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_end, distal);
-		
+
 		//更新uniform块
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
@@ -262,11 +263,11 @@ int main()
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		
+
 		//临时绘制标志位
 		vector<glm::vec3> pospoints{ {0.0f,0,0},{ 0,0,75.0f },{ 0, 15.0f, 0 } };
-		drawPoint(pointPtrShader,  pointVAO, pospoints);
-		
+		drawPoint(pointPtrShader, pointVAO, pospoints);
+
 
 		//设置光结束
 		//draw 模型
@@ -280,39 +281,40 @@ int main()
 
 		ourShader.use();
 		ourShader.setVec3("viewPos", MyCamera.Position);
-		
+
 		int  n = video1.m_iNumFrame;
-		static int i = 0;
-		if (i == n)	i = 0;
+		static int i = 5;
+		if (i == n)	i = 5;
+		//video1.ReadMovFrame(90, &img);
 		video1.ReadMovFrame(i++, &img);
 		img.reverseData();
 		unsigned int LED = LoadTex(img);
 		vector<unsigned int> LEDT;
 		LEDT.clear();
-		//unsigned int wsp = LoadTex("wsp.jpg");
-		//LEDT.push_back(wsp);
+		
 		LEDT.push_back(LED);
+		LEDT.push_back(wsp);
+
 		//LEDT.push_back(container);
 		//LEDT.push_back(LED);
-		
+
 		//LEDT.push_back(LED);
 		//cout << "--------";
 		//cout << "floor="<< textureIDFloor <<" LED="<<LED<<" wsp="<<wsp  << endl;
-		
-		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO,LEDT);
+
+		renderScene(ourShader, LEDShader, ourModel, textureIDFloor, floorVAO, LEDT, video1.m_movHeight, video1.m_movWidth);
 		//ledMgr.printSize();
 
 		glfwSwapBuffers(Window);
 		glfwPollEvents();
 	}
-	
+
 	//glDeleteBuffers(1, &VBO);
 	video1.ReadMovEnd();
-	
 	glfwTerminate();
 	return 0;
 }
-void drawPoint(Shader pointPtrShader,unsigned int pointVAO, vector<glm::vec3> pos)
+void drawPoint(Shader pointPtrShader, unsigned int pointVAO, vector<glm::vec3> pos)
 {
 	//开始
 	pointPtrShader.use();
@@ -347,19 +349,19 @@ void drawPoint(Shader pointPtrShader,unsigned int pointVAO, vector<glm::vec3> po
 
 	//结束
 }
-void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int textureIDFloor, unsigned int floorVAO, vector<unsigned int> LED)
+void renderScene(Shader &ourShader, Shader &LEDShader, Model &ourModel, unsigned int &textureIDFloor, unsigned int &floorVAO, vector<unsigned int> &LED, int &height, int &width)
 {
 	static bool first = true;
 
-	for (unsigned int i = 0; i<peopleCount; i++)
+	for (unsigned int i = 0; i < peopleCount; i++)
 	{
 		if (first)
 		{
 			glm::mat4 model;
 
-			model = glm::translate(model, glm::vec3(9.0f*(i % 10), -1.0f, -7.0f*(i / 10)));
+			model = glm::translate(model, glm::vec3(9.0f * (i % 10), -1.0f, -7.0f * (i / 10)));
 			model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
-			model = glm::translate(model, glm::vec3(19.0f , 0.0f, 0.0f));
+			model = glm::translate(model, glm::vec3(19.0f, 0.0f, 0.0f));
 
 			//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 			movestep.addInstance(model);
@@ -371,11 +373,11 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 		}
 		else
 		{
-			
+
 			//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
 			/*glm::vec3 tmp = movestep.getCurModel(i)*glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 			model = glm::translate(model, tmp);*/
-			
+
 			glm::vec3 vec = movestep.getPos(i);
 			IoLight.settar(vec);
 			IoLight.rendSLight();
@@ -386,7 +388,7 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 		}
 
 	}
-	
+
 
 	//地板
 	ourShader.use();
@@ -406,7 +408,7 @@ void renderScene(Shader ourShader, Shader LEDShader,Model ourModel, unsigned int
 		{
 			glm::mat4 model;
 			model = glm::scale(model, glm::vec3(rate, 1, rate));
-			model = glm::translate(model, glm::vec3(1.0f*i, -0.5f, 1.0f*j));
+			model = glm::translate(model, glm::vec3(1.0f * i, -0.5f, 1.0f * j));
 			ourShader.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
@@ -423,17 +425,19 @@ glBindTexture(GL_TEXTURE_2D, LED);
 LEDShader.setVec3("viewPos", MyCamera.Position);
 glBindVertexArray(floorVAO);*/
 	int rra = 15;
+	float thrate = height / 15;
+	//cout << "thrate= "<<thrate<<" height= "<<height<<" weight= "<<weight <<endl;
 	int jj = 0;
 	ledMgr.clear(LEDShader.ID);
 	for (auto i : LED)
 	{
 
 		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(25 * jj, 0.0f, 0));
+		model = glm::translate(model, glm::vec3(60 * jj, 0.0f, 0));
 		//model = glm::translate(model, glm::vec3(-3.5, 0.0f, 0));
-		model = glm::scale(model, glm::vec3(1, rra, rra * rate));
+		model = glm::scale(model, glm::vec3(1, 2*height / thrate, 2*width / thrate));
 		model = glm::translate(model, glm::vec3(0, 0.0f, 0.5f));
-		model = glm::rotate(model, glm::radians(180.0f*jj), glm::vec3(0,1, 0));
+		model = glm::rotate(model, glm::radians(180.0f * jj), glm::vec3(0, 1, 0));
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 0, 1));
 		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
 		model = glm::translate(model, glm::vec3(0, -0.50f, -0.50f));
@@ -488,7 +492,7 @@ void processInput(GLFWwindow* Window)
 			MyCamera.ProcessKeyboard(DOWN, deltaTime);
 		if (glfwGetKey(Window, GLFW_KEY_E) == GLFW_PRESS)
 			MyCamera.ProcessKeyboard(UP, deltaTime);
-	} 
+	}
 	else
 	{
 		if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
@@ -601,7 +605,7 @@ unsigned int loadCubemap(vector<std::string> faces)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 	stbi_set_flip_vertically_on_load(false);
 	int width, height, nrChannels;
-	for (unsigned int i=0;i<faces.size()&&i<6;i++)
+	for (unsigned int i = 0; i < faces.size() && i < 6; i++)
 	{
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
@@ -658,7 +662,7 @@ GLFWwindow* RC() {
 	return Window;
 }
 float calcCo(glm::vec3 begin, glm::vec3 end) {
-	return glm::acos(glm::dot(begin, end) / movestep.calmoc(begin)*movestep.calmoc(begin));
+	return glm::acos(glm::dot(begin, end) / movestep.calmoc(begin) * movestep.calmoc(begin));
 }
 //把i设置为圆心其他为原型
 
@@ -672,38 +676,38 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		glfwGetCursorPos(window, &xpos, &ypos);
 		float val;
 		ypos = SCR_HEIGHT - ypos;
-		
+
 		glReadPixels(xpos, ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &val);
 
 		curMousePos.x = xpos;
 		curMousePos.y = ypos;
 		curMousePos.z = val;
 		glm::vec3 worldPos;
-		worldPos = glm::unProject(curMousePos, view, projection, glm::vec4(0,0,800,600));
+		worldPos = glm::unProject(curMousePos, view, projection, glm::vec4(0, 0, 800, 600));
 		/*cout << "Cursor Position at (" << curMousePos.x << " : " << curMousePos.y << " : " <<curMousePos.z<<")"<<endl;
 		cout << "World Position at (" << worldPos.x << " : " << worldPos.y << " : " << worldPos.z << ")" << endl<<endl;*/
 		babox box = movestep.getBox();
-		for (int i=0;i<movestep.getNum();i++)
+		for (int i = 0; i < movestep.getNum(); i++)
 		{
-			
-			glm::vec4 tmp=glm::inverse(movestep.getCurModel(i))*glm::vec4(worldPos, 1);
-			bool x = tmp.x >= box.x.min&&tmp.x <= box.x.max;
-			bool y = tmp.y >= box.y.min&&tmp.y <= box.y.max;
-			bool z = tmp.z >= box.z.min&&tmp.z <= box.z.max;
-			if (x&&y&&z)
+
+			glm::vec4 tmp = glm::inverse(movestep.getCurModel(i)) * glm::vec4(worldPos, 1);
+			bool x = tmp.x >= box.x.min && tmp.x <= box.x.max;
+			bool y = tmp.y >= box.y.min && tmp.y <= box.y.max;
+			bool z = tmp.z >= box.z.min && tmp.z <= box.z.max;
+			if (x && y && z)
 			{
 				cout << "正在点" << i << endl;
-				movestep.setCPoint( i);
+				movestep.setCPoint(i);
 				break;
 			}
 		}
 	}
 }
 
-glm::mat4 * InitPlanetData()
+glm::mat4* InitPlanetData()
 {
-	
-	glm::mat4 *modelMatrices;
+
+	glm::mat4* modelMatrices;
 	modelMatrices = new glm::mat4[amount];
 	srand(glfwGetTime()); // 初始化随机种子    
 	float radius = 40.0;

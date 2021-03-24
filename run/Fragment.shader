@@ -57,7 +57,7 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
-#define LedNum 1
+#define LedNum 2
 
 struct LED {
 	sampler2D SLED;
@@ -181,6 +181,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 vec3 CalcLedLight4(int num, vec3 normal, vec3 fragPos, vec3 viewDir)//此4
 {
+    //return vec3(1, 1, 1);
     //通过pos降采返回vec3
     //通过颜色，和两个pos计算颜色
     int stepT = LEDA[num].density;//各分50步
@@ -833,10 +834,9 @@ vec2 offsets[9] = vec2[](
     
 vec3 CalcColor(int num,vec2 tx)
 {
-    // if(num==0)
-   //{
-        //return vec3(num, 1 - num, 0);
-        int thnum = num;
+    if(num==0)
+   {
+       // return vec3(0,0 , 1);
         vec3 sampleTex[9];
         for (int i = 0; i < 9; i++)
             sampleTex[i] = vec3(texture(LEDA[0].SLED, tx + offsets[i]));//通过传参数调用就出问题
@@ -844,26 +844,22 @@ vec3 CalcColor(int num,vec2 tx)
 
         for (int i = 0; i < 9; i++)
             col += sampleTex[i] * kernel[i];
-        //col=vec3(texture(LEDA[num],tx));
-            //return vec3(1, 0, 0);
         return  col;
-  //  }
- //    else if (num == 1)
- //    {
- //        //   //return vec3(1,0,0);
- //        //   int thnum = num;
- //        //   vec3 sampleTex[9];
- //        //  // sampler2D curid = LEDA[1].SLED;
- //        //   for (int i = 0; i < 9; i++)
- //        //       sampleTex[i] = vec3(texture(LEDA[1].SLED, tx + offsets[i]));//通过传参数调/用/就出问/题
- //        //   vec3 col = vec3(0.0f);
- //        //
- //        //   for (int i = 0; i < 9; i++)
- //        //       col += sampleTex[i] * kernel[i];
- //        //   //col=vec3(texture(LEDA[num],tx));
- //        //       //return vec3(1, 0, 0);
- //        //   return  col;
- //    }
+   }
+   else if (num == 1)
+   {
+        // return vec3(0,1,0);
+         vec3 sampleTex[9];
+        // sampler2D curid = LEDA[1].SLED;
+         for (int i = 0; i < 9; i++)
+             sampleTex[i] = vec3(texture(LEDA[1].SLED, tx + offsets[i]));//通过传参数调/出//题
+          vec3 col = vec3(0.0f);
+       
+          for (int i = 0; i < 9; i++)
+              col += sampleTex[i] * kernel[i];
+          return  col;
+    }
+   else { return vec3(1, 0, 0); }
  //    else
  //  else {
  //       return vec3(1, 0, 0);
